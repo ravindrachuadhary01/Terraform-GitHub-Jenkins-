@@ -29,14 +29,6 @@ resource "aws_lb_target_group" "tg" {
   }
 }
 
-# Attach EC2 instances
-resource "aws_lb_target_group_attachment" "tg_attach" {
-  count            = 2
-  target_group_arn = aws_lb_target_group.tg.arn
-  target_id        = aws_instance.ec2[count.index].id
-  port             = 80
-}
-
 # Listener
 resource "aws_lb_listener" "listener" {
   load_balancer_arn = aws_lb.alb.arn
