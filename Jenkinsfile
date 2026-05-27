@@ -5,11 +5,8 @@ pipeline {
     }
 
     parameters {
-        choice(
-            name: 'ACTION',
-            choices: ['apply', 'destroy'],
-            description: 'Terraform Action'
-        )
+    choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Terraform Action')
+}
     }
     stages {
 
@@ -30,13 +27,17 @@ pipeline {
             }
         }
 
-        stage('Terraform Apply') {
-            steps {
-                withCredentials([[
-                    $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'aws-creds'
-                ]]) {
+       stage('Terraform') {
+    steps {
+        withCredentials([[
+            $class: 'AmazonWebServicesCredentialsBinding',
+            credentialsId: 'aws-creds'
+        ]]) {
+            script {
+                if (params.ACTION == 'apply') {
                     sh 'terraform apply -auto-approve'
+                } else {
+                    sh 'terraform destroy -auto-approve'
                 }
             }
         }
