@@ -6,7 +6,6 @@ app = Flask(__name__)
 DB_HOST = "app-mysql-db.cr04wsu2e9r0.ap-south-1.rds.amazonaws.com"
 DB_USER = "admin"
 DB_PASSWORD = "Admin12345"
-DB_NAME = "mydb"
 
 @app.route("/")
 def home():
@@ -14,17 +13,10 @@ def home():
         connection = pymysql.connect(
             host=DB_HOST,
             user=DB_USER,
-            password=DB_PASSWORD,
-            database=DB_NAME
+            password=DB_PASSWORD
         )
 
-        cursor = connection.cursor()
-
-        cursor.execute("SELECT * FROM users")
-
-        data = cursor.fetchall()
-
-        return str(data)
+        return "✅ Flask Backend Connected to RDS Successfully!"
 
     except Exception as e:
         return f"Database Connection Failed: {e}"
