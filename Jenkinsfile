@@ -9,7 +9,9 @@ pipeline {
                 url: 'https://github.com/ravindrachuadhary01/Terraform-GitHub-Jenkins-.git'
             }
         }
-
+parameters {
+    choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Terraform Action')
+}
         stage('Terraform Init') {
             steps {
                 withCredentials([[
