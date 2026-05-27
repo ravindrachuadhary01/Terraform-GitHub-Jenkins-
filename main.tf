@@ -1,37 +1,47 @@
-resource "aws_launch_template" "lt" {
-  name_prefix   = "app-template"
-  image_id      = "ami-0f5ee92e2d63afc18"
-  instance_type = "t3.micro"
+# RDS Security Group (FIXED)
+resource "aws_security_group" "rds_sg" {
+  name   = "rds-sg"
+  vpc_id = aws_vpc.main.id
 
-  vpc_security_group_ids = [aws_security_group.sg.id]
-   update_default_version = true
+  # Allow ONLY app security group (EC2/ASG)
+  ingress {
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [aws_security_group.sg.id]
+  }
 
-  user_data = base64encode(<<-EOF
-    #!/bin/bash
-    yum install -y nginx
-    systemctl start nginx
-    systemctl enable nginx
-    echo "Hello from ASG $(hostname)" > /usr/share/nginx/html/index.html
-  EOF
-  )
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
-resource "aws_autoscaling_group" "asg" {
-  desired_capacity = 2
-  max_size         = 3
-  min_size         = 1
+# RDS Instance (FIXED connectivity settings)
+resource "aws_db_instance" "mysql" {
+  identifier         = "app-mysql-db"
+  engine             = "mysql"
+  engine_version     = "8.0"
+  instance_class     = "db.t3.micro"
 
-  vpc_zone_identifier = [
-    aws_subnet.public_1.id,
-    aws_subnet.public_2.id
-  ]
+  allocated_storage  = 20
 
-  target_group_arns = [aws_lb_target_group.tg.arn]
+  username           = "admin"
+  password           = "Admin12345"
 
-  health_check_type = "ELB"
+  db_subnet_group_name   = aws_db_subnet_group.db_subnet.name
+  vpc_security_group_ids = [aws_security_group.rds_sg.id]
 
-  launch_template {
-    id      = aws_launch_template.lt.id
-    version = "$Latest"
+  publicly_accessible = false
+
+  skip_final_snapshot = true
+  multi_az            = false
+
+  deletion_protection = false
+
+  tags = {
+    Name = "App-RDS"
   }
 }
