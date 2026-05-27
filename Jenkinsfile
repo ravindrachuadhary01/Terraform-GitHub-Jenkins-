@@ -2,7 +2,10 @@ pipeline {
     agent any
 
     environment {
-        AWS_REGION = "ap-south-1"
+        AWS_REGION = 'ap-south-1'
+        ECR_REPO   = 'flask-backend'
+        ACCOUNT_ID = '192902842773'
+        IMAGE_TAG  = 'latest'
     }
 
     parameters {
@@ -60,14 +63,67 @@ pipeline {
                 }
             }
         }
+
+        stage('Build Docker Image') {
+            when {
+                expression { params.ACTION == 'apply' }
+            }
+
+            steps {
+                dir('backend') {
+                    sh 'docker build -t $ECR_REPO:$IMAGE_TAG .'
+                }
+            }
+        }
+
+        stage('Login to ECR') {
+            when {
+                expression { params.ACTION == 'apply' }
+            }
+
+            steps {
+                sh '''
+                aws ecr get-login-password --region $AWS_REGION | \
+                docker login --username AWS --password-stdin \
+                $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+                '''
+            }
+        }
+
+        stage('Tag Docker Image') {
+            when {
+                expression { params.ACTION == 'apply' }
+            }
+
+            steps {
+                sh '''
+                docker tag $ECR_REPO:$IMAGE_TAG \
+                $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
+                '''
+            }
+        }
+
+        stage('Push Docker Image') {
+            when {
+                expression { params.ACTION == 'apply' }
+            }
+
+            steps {
+                sh '''
+                docker push \
+                $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
+                '''
+            }
+        }
     }
 
     post {
         success {
-            echo "✅ Pipeline completed successfully"
+            echo '✅ Terraform + Docker Pipeline Completed Successfully!'
         }
+
         failure {
-            echo "❌ Pipeline failed"
+            echo '❌ Pipeline Failed!'
         }
     }
 }
