@@ -18,7 +18,7 @@ pipeline {
 
     stages {
 
-        stage('Clone Code') {
+        stage('Clone Repository') {
             steps {
                 git branch: 'main',
                 url: 'https://github.com/ravindrachuadhary01/Terraform-GitHub-Jenkins-.git'
@@ -31,7 +31,10 @@ pipeline {
                     $class: 'AmazonWebServicesCredentialsBinding',
                     credentialsId: 'aws-creds'
                 ]]) {
-                    sh 'terraform init'
+
+                    sh '''
+                    terraform init
+                    '''
                 }
             }
         }
@@ -42,13 +45,17 @@ pipeline {
                     $class: 'AmazonWebServicesCredentialsBinding',
                     credentialsId: 'aws-creds'
                 ]]) {
-                    sh 'terraform plan'
+
+                    sh '''
+                    terraform plan
+                    '''
                 }
             }
         }
 
-        stage('Terraform Apply/Destroy') {
+        stage('Terraform Apply / Destroy') {
             steps {
+
                 withCredentials([[
                     $class: 'AmazonWebServicesCredentialsBinding',
                     credentialsId: 'aws-creds'
@@ -57,11 +64,16 @@ pipeline {
                     script {
 
                         if (params.ACTION == 'apply') {
-                            sh 'terraform apply -auto-approve'
-                        }
 
-                        else {
-                            sh 'terraform destroy -auto-approve'
+                            sh '''
+                            terraform apply -auto-approve
+                            '''
+
+                        } else {
+
+                            sh '''
+                            terraform destroy -auto-approve
+                            '''
                         }
                     }
                 }
@@ -85,7 +97,7 @@ pipeline {
             }
         }
 
-        stage('Login to ECR') {
+        stage('Login to AWS ECR') {
 
             when {
                 expression { params.ACTION == 'apply' }
@@ -122,7 +134,7 @@ pipeline {
             }
         }
 
-        stage('Push Docker Image') {
+        stage('Push Docker Image to ECR') {
 
             when {
                 expression { params.ACTION == 'apply' }
@@ -142,16 +154,55 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy Flask Container') {
+
+            when {
+                expression { params.ACTION == 'apply' }
+            }
+
+            steps {
+
+                sh '''
+                docker stop flask-app || true
+                docker rm flask-app || true
+
+                docker run -d \
+                --name flask-app \
+                -p 5000:5000 \
+                192902842773.dkr.ecr.ap-south-1.amazonaws.com/flask-backend:latest
+                '''
+            }
+        }
+
+        stage('Verify Deployment') {
+
+            when {
+                expression { params.ACTION == 'apply' }
+            }
+
+            steps {
+
+                sh '''
+                docker ps
+                '''
+            }
+        }
     }
 
     post {
 
         success {
-            echo '✅ Terraform + Docker Pipeline Completed Successfully!'
+
+            echo '✅ FULLY AUTOMATED 3-TIER PIPELINE SUCCESSFUL'
+            echo '✅ Terraform Infrastructure Created'
+            echo '✅ Docker Image Pushed to ECR'
+            echo '✅ Flask App Deployed Successfully'
         }
 
         failure {
-            echo '❌ Pipeline Failed!'
+
+            echo '❌ PIPELINE FAILED'
         }
     }
 }
