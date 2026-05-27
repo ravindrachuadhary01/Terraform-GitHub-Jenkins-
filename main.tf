@@ -11,14 +11,16 @@ resource "aws_instance" "ec2" {
 
   vpc_security_group_ids = [aws_security_group.sg.id]
 
+  user_data = <<-EOF
+              #!/bin/bash
+              yum update -y
+              yum install -y nginx
+              systemctl start nginx
+              systemctl enable nginx
+              echo "Hello from EC2 $(hostname)" > /usr/share/nginx/html/index.html
+              EOF
+
   tags = {
     Name = "App-Server-${count.index}"
   }
 }
-user_data = <<-EOF
-#!/bin/bash
-yum install -y nginx
-systemctl start nginx
-systemctl enable nginx
-echo "Hello from EC2 $(hostname)" > /usr/share/nginx/html/index.html
-EOF
