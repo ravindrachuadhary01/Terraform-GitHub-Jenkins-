@@ -53,10 +53,14 @@ pipeline {
                     $class: 'AmazonWebServicesCredentialsBinding',
                     credentialsId: 'aws-creds'
                 ]]) {
+
                     script {
+
                         if (params.ACTION == 'apply') {
                             sh 'terraform apply -auto-approve'
-                        } else {
+                        }
+
+                        else {
                             sh 'terraform destroy -auto-approve'
                         }
                     }
@@ -65,37 +69,52 @@ pipeline {
         }
 
         stage('Build Docker Image') {
+
             when {
                 expression { params.ACTION == 'apply' }
             }
 
             steps {
+
                 dir('backend') {
-                    sh 'docker build -t $ECR_REPO:$IMAGE_TAG .'
+
+                    sh '''
+                    docker build -t $ECR_REPO:$IMAGE_TAG .
+                    '''
                 }
             }
         }
 
         stage('Login to ECR') {
+
             when {
                 expression { params.ACTION == 'apply' }
             }
 
             steps {
-                sh '''
-                aws ecr get-login-password --region $AWS_REGION | \
-                docker login --username AWS --password-stdin \
-                $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
-                '''
+
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-creds'
+                ]]) {
+
+                    sh '''
+                    aws ecr get-login-password --region $AWS_REGION | \
+                    docker login --username AWS --password-stdin \
+                    $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+                    '''
+                }
             }
         }
 
         stage('Tag Docker Image') {
+
             when {
                 expression { params.ACTION == 'apply' }
             }
 
             steps {
+
                 sh '''
                 docker tag $ECR_REPO:$IMAGE_TAG \
                 $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
@@ -104,20 +123,29 @@ pipeline {
         }
 
         stage('Push Docker Image') {
+
             when {
                 expression { params.ACTION == 'apply' }
             }
 
             steps {
-                sh '''
-                docker push \
-                $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
-                '''
+
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-creds'
+                ]]) {
+
+                    sh '''
+                    docker push \
+                    $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
+                    '''
+                }
             }
         }
     }
 
     post {
+
         success {
             echo '✅ Terraform + Docker Pipeline Completed Successfully!'
         }
