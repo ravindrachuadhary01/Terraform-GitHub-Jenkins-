@@ -1,12 +1,3 @@
-resource "aws_db_subnet_group" "db_subnet" {
-  name = "app-db-subnet-group"
-
-  subnet_ids = [
-    aws_subnet.private_db_1.id,
-    aws_subnet.private_db_2.id
-  ]
-}
-
 resource "aws_security_group" "rds_sg" {
   name   = "rds-sg"
   vpc_id = aws_vpc.main.id
