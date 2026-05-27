@@ -4,9 +4,12 @@ pipeline {
         AWS_REGION = "ap-south-1"
     }
 
-    parameters {
-    choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Terraform Action')
-}
+perameters {
+        choice(
+            name: 'ACTION',
+            choices: ['apply', 'destroy'],
+            description: 'Terraform Action'
+        )
     }
     stages {
 
@@ -27,7 +30,7 @@ pipeline {
             }
         }
 
-       stage('Terraform') {
+        stage('Terraform') {
     steps {
         withCredentials([[
             $class: 'AmazonWebServicesCredentialsBinding',
