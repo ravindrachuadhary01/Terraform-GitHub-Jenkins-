@@ -28,3 +28,9 @@ pipeline {
         }
     }
 }
+
+stage('Debug Credentials') {
+    steps {
+        echo "Testing credentials"
+    }
+}
