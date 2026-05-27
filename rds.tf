@@ -34,21 +34,24 @@ resource "aws_security_group" "rds_sg" {
 
 # RDS Instance
 resource "aws_db_instance" "mysql" {
-  identifier             = "app-mysql-db"
-  allocated_storage      = 20
-  engine                 = "mysql"
-  engine_version         = "8.0"
-  instance_class         = "db.t3.micro"
+  identifier         = "app-mysql-db"
+  allocated_storage  = 20
+  storage_type       = "gp2"
 
-  username               = "admin"
-  password               = "Admin12345"
+  engine             = "mysql"
+  engine_version     = "8.0"
+
+  instance_class     = "db.t3.micro"
+
+  username           = "admin"
+  password           = "Admin12345"
+
+  publicly_accessible = false
+  skip_final_snapshot = true
+  multi_az            = false
 
   db_subnet_group_name   = aws_db_subnet_group.db_subnet.name
   vpc_security_group_ids = [aws_security_group.rds_sg.id]
-
-  publicly_accessible    = false
-  skip_final_snapshot    = true
-  multi_az               = false
 
   tags = {
     Name = "App-RDS"
