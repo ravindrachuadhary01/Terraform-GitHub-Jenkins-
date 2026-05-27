@@ -1,6 +1,16 @@
 pipeline {
     agent any
+    environment {
+        AWS_REGION = "ap-south-1"
+    }
 
+    parameters {
+        choice(
+            name: 'ACTION',
+            choices: ['apply', 'destroy'],
+            description: 'Terraform Action'
+        )
+    }
     stages {
 
         stage('Clone Code') {
@@ -9,9 +19,6 @@ pipeline {
                 url: 'https://github.com/ravindrachuadhary01/Terraform-GitHub-Jenkins-.git'
             }
         }
-parameters {
-    choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Terraform Action')
-}
         stage('Terraform Init') {
             steps {
                 withCredentials([[
