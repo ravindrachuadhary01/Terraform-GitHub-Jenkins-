@@ -9,10 +9,10 @@ pipeline {
         )
     }
 
-    environment {
-        AWS_ACCESS_KEY_ID     = credentials('aws-access-key-id')
-        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
-    }
+   environment {
+    AWS_ACCESS_KEY_ID     = credentials('AKIASZ2PHZGK4ZRBJN7T').accessKey
+    AWS_SECRET_ACCESS_KEY = credentials('AKIASZ2PHZGK4ZRBJN7T').secretKey
+}
 
     stages {
 
