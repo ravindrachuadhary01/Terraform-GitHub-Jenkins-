@@ -16,6 +16,7 @@ variable "ami_id" {
   default     = "ami-0f5ee92e2d63afc18"
 }
 
-variable "key_name" {
-  type    = string
+resource "aws_key_pair" "deployer_key" {
+  key_name   = "ravindra-key"
+  public_key = file("${path.module}/id_ed25519.pub")
 }
