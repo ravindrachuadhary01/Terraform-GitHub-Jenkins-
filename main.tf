@@ -1,27 +1,33 @@
 resource "aws_instance" "ec2" {
   count = 2
 
-  ami           = "ami-0f5ee92e2d63afc18"
+  # Ubuntu 22.04 AMI (ap-south-1)
+  ami           = "ami-03f4878755434977f"
   instance_type = "t3.micro"
 
+  # First instance -> Public subnet
+  # Second instance -> Private subnet
   subnet_id = element([
     aws_subnet.public_1.id,
-    aws_subnet.public_2.id
+    aws_subnet.private_1.id
   ], count.index)
 
   vpc_security_group_ids = [aws_security_group.sg.id]
 
+  # Public IP only for public instance
+  associate_public_ip_address = count.index == 0 ? true : false
+
   user_data = <<-EOF
               #!/bin/bash
-              yum update -y
-              yum install -y nginx
+              apt update -y
+              apt install -y nginx
               systemctl start nginx
               systemctl enable nginx
-              echo "Hello from EC2 $(hostname)" > /usr/share/nginx/html/index.html
+              echo "Hello from EC2 $(hostname)" > /var/www/html/index.nginx-debian.html
               EOF
 
   tags = {
-    Name = "App-Server-${count.index}"
+    Name = count.index == 0 ? "Public-Server" : "Private-Server"
   }
 }
 
