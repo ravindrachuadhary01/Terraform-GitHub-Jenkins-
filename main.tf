@@ -9,7 +9,7 @@ resource "aws_instance" "ec2" {
   # Second instance -> Private subnet
   subnet_id = element([
     aws_subnet.public_1.id,
-    aws_subnet.private_1.id
+    aws_subnet.private_app_1.id
   ], count.index)
 
   vpc_security_group_ids = [aws_security_group.sg.id]
