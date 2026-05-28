@@ -1,30 +1,33 @@
-########################################
-# PUBLIC EC2 (FRONTEND / APP)
-########################################
-resource "aws_instance" "app" {
-  ami           = "ami-0f5ee92e2d63afc18"
-  instance_type = "t2.micro"
+resource "aws_security_group" "ec2_sg" {
+  vpc_id = aws_vpc.main.id
 
-  subnet_id              = aws_subnet.public_subnet.id
-  vpc_security_group_ids = [aws_security_group.ec2_sg.id]
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
-  user_data = <<-EOF
-    #!/bin/bash
-    apt update -y
-    apt install nginx -y
-    systemctl start nginx
-  EOF
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
-  tags = {
-    Name = "app-server"
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
-########################################
-# TARGET GROUP ATTACHMENT
-########################################
-resource "aws_lb_target_group_attachment" "attach" {
-  target_group_arn = aws_lb_target_group.tg.arn
-  target_id        = aws_instance.app.id
-  port             = 80
+resource "aws_instance" "web" {
+  ami                    = "ami-0f58b397bc5c1f2e8"
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.public_subnet.id
+  vpc_security_group_ids = [aws_security_group.ec2_sg.id]
+
+  key_name = var.key_name
 }
