@@ -1,78 +1,27 @@
-# =========================
-# FRONTEND SECURITY GROUP
-# =========================
+resource "aws_instance" "ec2" {
+  count = 2
 
-resource "aws_security_group" "frontend_sg" {
-  name        = "frontend-sg"
-  description = "Allow HTTP and SSH"
-  vpc_id      = aws_vpc.main.id
+  ami           = "ami-0f5ee92e2d63afc18"
+  instance_type = "t3.micro"
 
-  ingress {
-    description = "HTTP"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  subnet_id = element([
+    aws_subnet.public_1.id,
+    aws_subnet.public_2.id
+  ], count.index)
 
-  ingress {
-    description = "SSH"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  vpc_security_group_ids = [aws_security_group.sg.id]
 
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  user_data = <<-EOF
+              #!/bin/bash
+              yum update -y
+              yum install -y nginx
+              systemctl start nginx
+              systemctl enable nginx
+              echo "Hello from EC2 $(hostname)" > /usr/share/nginx/html/index.html
+              EOF
 
   tags = {
-    Name = "frontend-sg"
-  }
-}
-
-# =========================
-# BACKEND SECURITY GROUP
-# =========================
-
-resource "aws_security_group" "backend_sg" {
-  name        = "backend-sg"
-  description = "Allow Flask App"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    description = "Flask Port"
-    from_port   = 5000
-    to_port     = 5000
-    protocol    = "tcp"
-
-    security_groups = [
-      aws_security_group.frontend_sg.id
-    ]
-  }
-
-  ingress {
-    description = "SSH"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "backend-sg"
+    Name = "App-Server-${count.index}"
   }
 }
 
