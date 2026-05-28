@@ -1,3 +1,65 @@
+# =========================
+# FRONTEND EC2 INSTANCE
+# =========================
+
+resource "aws_instance" "frontend" {
+  ami                    = "ami-0f918f7e67a3323f0"
+  instance_type          = "t3.micro"
+
+  subnet_id              = aws_subnet.public_1.id
+
+  vpc_security_group_ids = [aws_security_group.frontend_sg.id]
+
+  associate_public_ip_address = true
+
+  key_name = "your-key-name"
+
+  user_data = <<-EOF
+              #!/bin/bash
+              apt update -y
+              apt install docker.io -y
+
+              systemctl start docker
+              systemctl enable docker
+
+              docker run -d -p 80:80 nginx
+              EOF
+
+  tags = {
+    Name = "frontend-ec2"
+  }
+}
+
+# =========================
+# BACKEND EC2 INSTANCE
+# =========================
+
+resource "aws_instance" "backend" {
+  ami                    = "ami-0f918f7e67a3323f0"
+  instance_type          = "t3.micro"
+
+  subnet_id              = aws_subnet.private_app_1.id
+
+  vpc_security_group_ids = [aws_security_group.backend_sg.id]
+
+  key_name = "your-key-name"
+
+  user_data = <<-EOF
+              #!/bin/bash
+              apt update -y
+              apt install docker.io awscli -y
+
+              systemctl start docker
+              systemctl enable docker
+
+              docker run -d -p 5000:5000 nginx
+              EOF
+
+  tags = {
+    Name = "backend-ec2"
+  }
+}
+
 # RDS Security Group (FIXED)
 resource "aws_security_group" "rds_sg" {
   name   = "rds-sg"
