@@ -1,6 +1,8 @@
 # VPC
 resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
 
   tags = {
     Name = "Main-VPC"
@@ -19,16 +21,17 @@ resource "aws_subnet" "public_subnet" {
   }
 }
 
-# Private Subnet
+# Private Subnet 1
 resource "aws_subnet" "private_subnet" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.2.0/24"
   availability_zone = "ap-south-1a"
 
   tags = {
-    Name = "Private-Subnet"
+    Name = "Private-Subnet-1"
   }
 }
+
 # Private Subnet 2
 resource "aws_subnet" "private_subnet_2" {
   vpc_id            = aws_vpc.main.id
@@ -39,6 +42,7 @@ resource "aws_subnet" "private_subnet_2" {
     Name = "Private-Subnet-2"
   }
 }
+
 # Internet Gateway
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
@@ -62,9 +66,8 @@ resource "aws_route_table" "public_rt" {
   }
 }
 
-# Route Table Association for Public Subnet
+# Associate Public Subnet
 resource "aws_route_table_association" "public_assoc" {
   subnet_id      = aws_subnet.public_subnet.id
   route_table_id = aws_route_table.public_rt.id
-
 }

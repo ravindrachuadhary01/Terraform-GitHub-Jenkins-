@@ -1,3 +1,6 @@
+# ----------------------
+# PUBLIC EC2 SG
+# ----------------------
 resource "aws_security_group" "public_sg" {
   vpc_id = aws_vpc.main.id
 
@@ -23,14 +26,17 @@ resource "aws_security_group" "public_sg" {
   }
 }
 
-resource "aws_security_group" "private_sg" {
+# ----------------------
+# ALB SG
+# ----------------------
+resource "aws_security_group" "alb_sg" {
   vpc_id = aws_vpc.main.id
 
   ingress {
-    from_port       = 3306
-    to_port         = 3306
-    protocol        = "tcp"
-    security_groups = [aws_security_group.public_sg.id]
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
@@ -41,14 +47,17 @@ resource "aws_security_group" "private_sg" {
   }
 }
 
-resource "aws_security_group" "alb_sg" {
+# ----------------------
+# RDS SG (FIXED)
+# ----------------------
+resource "aws_security_group" "rds_sg" {
   vpc_id = aws_vpc.main.id
 
   ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [aws_security_group.public_sg.id] # backend EC2 access
   }
 
   egress {
