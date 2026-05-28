@@ -6,6 +6,8 @@ resource "aws_db_subnet_group" "main" {
     aws_subnet.private_subnet_2.id
   ]
 }
+security_groups = [aws_security_group.private_sg.id]
+vpc_security_group_ids = [aws_security_group.rds_sg.id]
 
 resource "aws_db_instance" "mysql" {
   identifier           = "mysql-db"
