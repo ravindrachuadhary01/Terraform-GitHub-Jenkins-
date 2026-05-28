@@ -3,6 +3,7 @@
 ############################################
 
 resource "aws_db_subnet_group" "db_subnet" {
+
   name = "app-db-subnet-group"
 
   subnet_ids = [
@@ -20,24 +21,38 @@ resource "aws_db_subnet_group" "db_subnet" {
 ############################################
 
 resource "aws_security_group" "rds_sg" {
+
   name        = "rds-sg"
-  description = "Allow MySQL access from App EC2 only"
+  description = "Allow MySQL from App SG"
   vpc_id      = aws_vpc.main.id
 
-  ingress {
-    description     = "MySQL from App SG"
-    from_port       = 3306
-    to_port         = 3306
-    protocol        = "tcp"
+  #################################
+  # INBOUND RULE
+  #################################
 
-    # ONLY EC2/App servers can access RDS
-    security_groups = [aws_security_group.sg.id]
+  ingress {
+
+    description = "MySQL from EC2/App"
+
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "tcp"
+
+    security_groups = [
+      aws_security_group.sg.id
+    ]
   }
 
+  #################################
+  # OUTBOUND RULE
+  #################################
+
   egress {
+
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
+
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -74,6 +89,7 @@ resource "aws_db_instance" "mysql" {
   #################################
 
   db_name  = "mydb"
+
   username = "admin"
   password = "Admin12345"
 
@@ -82,7 +98,10 @@ resource "aws_db_instance" "mysql" {
   #################################
 
   db_subnet_group_name   = aws_db_subnet_group.db_subnet.name
-  vpc_security_group_ids = [aws_security_group.rds_sg.id]
+
+  vpc_security_group_ids = [
+    aws_security_group.rds_sg.id
+  ]
 
   publicly_accessible = false
 
@@ -96,9 +115,11 @@ resource "aws_db_instance" "mysql" {
   # BACKUP
   #################################
 
-  backup_retention_period = 7
-  skip_final_snapshot     = true
-  deletion_protection     = false
+  backup_retention_period = 0
+
+  skip_final_snapshot = true
+
+  deletion_protection = false
 
   #################################
   # MONITORING
@@ -111,6 +132,12 @@ resource "aws_db_instance" "mysql" {
   #################################
 
   apply_immediately = true
+
+  #################################
+  # FREE TIER SAFE
+  #################################
+
+  auto_minor_version_upgrade = true
 
   #################################
   # TAGS
@@ -126,13 +153,16 @@ resource "aws_db_instance" "mysql" {
 ############################################
 
 output "rds_endpoint" {
+
   value = aws_db_instance.mysql.endpoint
 }
 
 output "rds_db_name" {
+
   value = aws_db_instance.mysql.db_name
 }
 
 output "rds_username" {
+
   value = aws_db_instance.mysql.username
 }
