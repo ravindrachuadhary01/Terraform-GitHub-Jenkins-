@@ -3,7 +3,7 @@ import pymysql
 
 app = Flask(__name__)
 
-DB_HOST = "YOUR-RDS-ENDPOINT"
+DB_HOST = "app-mysql-db.cr04wsu2e9r0.ap-south-1.rds.amazonaws.com"
 DB_USER = "admin"
 DB_PASSWORD = "Admin12345"
 DB_NAME = "mydb"
