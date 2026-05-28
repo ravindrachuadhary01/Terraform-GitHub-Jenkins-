@@ -1,62 +1,78 @@
 # =========================
-# FRONTEND EC2 INSTANCE
+# FRONTEND SECURITY GROUP
 # =========================
 
-resource "aws_instance" "frontend" {
-  ami                    = "ami-0f918f7e67a3323f0"
-  instance_type          = "t3.micro"
+resource "aws_security_group" "frontend_sg" {
+  name        = "frontend-sg"
+  description = "Allow HTTP and SSH"
+  vpc_id      = aws_vpc.main.id
 
-  subnet_id              = aws_subnet.public_1.id
+  ingress {
+    description = "HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
-  vpc_security_group_ids = [aws_security_group.frontend_sg.id]
+  ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
-  associate_public_ip_address = true
-
-  key_name = "your-key-name"
-
-  user_data = <<-EOF
-              #!/bin/bash
-              apt update -y
-              apt install docker.io -y
-
-              systemctl start docker
-              systemctl enable docker
-
-              docker run -d -p 80:80 nginx
-              EOF
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
   tags = {
-    Name = "frontend-ec2"
+    Name = "frontend-sg"
   }
 }
 
 # =========================
-# BACKEND EC2 INSTANCE
+# BACKEND SECURITY GROUP
 # =========================
 
-resource "aws_instance" "backend" {
-  ami                    = "ami-0f918f7e67a3323f0"
-  instance_type          = "t3.micro"
+resource "aws_security_group" "backend_sg" {
+  name        = "backend-sg"
+  description = "Allow Flask App"
+  vpc_id      = aws_vpc.main.id
 
-  subnet_id              = aws_subnet.private_app_1.id
+  ingress {
+    description = "Flask Port"
+    from_port   = 5000
+    to_port     = 5000
+    protocol    = "tcp"
 
-  vpc_security_group_ids = [aws_security_group.backend_sg.id]
+    security_groups = [
+      aws_security_group.frontend_sg.id
+    ]
+  }
 
-  key_name = "your-key-name"
+  ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
 
-  user_data = <<-EOF
-              #!/bin/bash
-              apt update -y
-              apt install docker.io awscli -y
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
-              systemctl start docker
-              systemctl enable docker
-
-              docker run -d -p 5000:5000 nginx
-              EOF
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 
   tags = {
-    Name = "backend-ec2"
+    Name = "backend-sg"
   }
 }
 
