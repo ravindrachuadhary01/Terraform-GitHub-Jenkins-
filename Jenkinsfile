@@ -2,10 +2,13 @@ pipeline {
     agent any
 
     environment {
-        AWS_REGION = 'ap-south-1'
-        ECR_REPO   = 'flask-backend'
-        ACCOUNT_ID = '192902842773'
-        IMAGE_TAG  = 'latest'
+        AWS_REGION        = 'ap-south-1'
+        ACCOUNT_ID        = '192902842773'
+
+        BACKEND_REPO      = 'flask-backend'
+        FRONTEND_REPO     = 'frontend-repo'
+
+        IMAGE_TAG         = 'latest'
     }
 
     parameters {
@@ -80,7 +83,7 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build Backend Docker Image') {
 
             when {
                 expression { params.ACTION == 'apply' }
@@ -91,7 +94,24 @@ pipeline {
                 dir('backend') {
 
                     sh '''
-                    docker build -t $ECR_REPO:$IMAGE_TAG .
+                    docker build -t $BACKEND_REPO:$IMAGE_TAG .
+                    '''
+                }
+            }
+        }
+
+        stage('Build Frontend Docker Image') {
+
+            when {
+                expression { params.ACTION == 'apply' }
+            }
+
+            steps {
+
+                dir('frontend') {
+
+                    sh '''
+                    docker build -t $FRONTEND_REPO:$IMAGE_TAG .
                     '''
                 }
             }
@@ -119,7 +139,7 @@ pipeline {
             }
         }
 
-        stage('Tag Docker Image') {
+        stage('Tag Docker Images') {
 
             when {
                 expression { params.ACTION == 'apply' }
@@ -128,13 +148,16 @@ pipeline {
             steps {
 
                 sh '''
-                docker tag $ECR_REPO:$IMAGE_TAG \
-                $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
+                docker tag $BACKEND_REPO:$IMAGE_TAG \
+                $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$BACKEND_REPO:$IMAGE_TAG
+
+                docker tag $FRONTEND_REPO:$IMAGE_TAG \
+                $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$FRONTEND_REPO:$IMAGE_TAG
                 '''
             }
         }
 
-        stage('Push Docker Image to ECR') {
+        stage('Push Docker Images') {
 
             when {
                 expression { params.ACTION == 'apply' }
@@ -142,19 +165,16 @@ pipeline {
 
             steps {
 
-                withCredentials([[
-                    $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'aws-creds'
-                ]]) {
+                sh '''
+                docker push \
+                $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$BACKEND_REPO:$IMAGE_TAG
 
-                    sh '''
-                    docker push \
-                    $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
-                    '''
-                }
+                docker push \
+                $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$FRONTEND_REPO:$IMAGE_TAG
+                '''
             }
         }
-1
+
         stage('Deploy Flask Container') {
 
             when {
@@ -170,11 +190,12 @@ pipeline {
                 docker run -d \
                 --name flask-app \
                 -p 5000:5000 \
-                192902842773.dkr.ecr.ap-south-1.amazonaws.com/flask-backend:latest
+               192902842773.dkr.ecr.ap-south-1.amazonaws.com/flask-backend:latest
                 '''
             }
         }
-        stage('Deploy Frontend Container') {
+
+        stage('Deploy React Container') {
 
             when {
                 expression { params.ACTION == 'apply' }
@@ -188,8 +209,8 @@ pipeline {
 
                 docker run -d \
                 --name react-app \
-                -p 5000:5000 \
-                192902842773.dkr.ecr.ap-south-1.amazonaws.com/frontend-repo:latest
+                -p 3000:3000 \
+               192902842773.dkr.ecr.ap-south-1.amazonaws.com/frontend-repo:latest
                 '''
             }
         }
@@ -203,19 +224,21 @@ pipeline {
             steps {
 
                 sh '''
-                docker ps -al
+                docker ps -a
                 '''
             }
         }
     }
+
     post {
 
         success {
 
             echo '✅ FULLY AUTOMATED 3-TIER PIPELINE SUCCESSFUL'
             echo '✅ Terraform Infrastructure Created'
-            echo '✅ Docker Image Pushed to ECR'
+            echo '✅ Docker Images Pushed to ECR'
             echo '✅ Flask App Deployed Successfully'
+            echo '✅ React App Deployed Successfully'
         }
 
         failure {
