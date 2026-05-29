@@ -5,40 +5,34 @@ set -ex
 exec > /var/log/user-data.log 2>&1
 
 apt update -y
-apt install -y docker.io
-
-apt update -y
 apt install -y docker.io awscli
 
 systemctl enable docker
 systemctl start docker
 
+# wait for docker
 until systemctl is-active --quiet docker; do
   sleep 2
 done
 
-docker rm -f frontend || true
+aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 192902842773.dkr.ecr.ap-south-1.amazonaws.com
 
-aws ecr get-login-password --region ap-south-1 \
-| docker login --username AWS --password-stdin 192902842773.dkr.ecr.ap-south-1.amazonaws.com
+docker rm -f frontend || true
 
 docker pull 192902842773.dkr.ecr.ap-south-1.amazonaws.com/frontend-repo:latest
 
-docker run -d \
-  --restart always \
+docker run -d --restart always \
   --name frontend \
   -p 8080:80 \
   192902842773.dkr.ecr.ap-south-1.amazonaws.com/frontend-repo:latest
 EOF
 
-
-  backend_user_data = <<-EOF
+}
+  locals {
+  frontend_user_data = <<-EOF
 #!/bin/bash
 set -ex
 exec > /var/log/user-data.log 2>&1
-
-apt update -y
-apt install -y docker.io
 
 apt update -y
 apt install -y docker.io awscli
@@ -46,22 +40,21 @@ apt install -y docker.io awscli
 systemctl enable docker
 systemctl start docker
 
+# wait for docker
 until systemctl is-active --quiet docker; do
   sleep 2
 done
 
-docker rm -f flask-app || true
+aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 192902842773.dkr.ecr.ap-south-1.amazonaws.com
 
-aws ecr get-login-password --region ap-south-1 \
-| docker login --username AWS --password-stdin 192902842773.dkr.ecr.ap-south-1.amazonaws.com
+docker rm -f frontend || true
 
-docker pull 192902842773.dkr.ecr.ap-south-1.amazonaws.com/flask-backend:latest
+docker pull 192902842773.dkr.ecr.ap-south-1.amazonaws.com/frontend-repo:latest
 
-docker run -d \
-  --restart always \
-  --name flask-app \
-  -p 5000:5000 \
-  192902842773.dkr.ecr.ap-south-1.amazonaws.com/flask-backend:latest
+docker run -d --restart always \
+  --name frontend \
+  -p 8080:80 \
+  192902842773.dkr.ecr.ap-south-1.amazonaws.com/frontend-repo:latest
 EOF
 }
 resource "aws_instance" "ec2" {
@@ -114,7 +107,7 @@ ingress {
     from_port   = 8080
     to_port     = 8080
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    security_groups = [aws_security_group.alb_sg.id]
     
 }
   egress {
