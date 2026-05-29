@@ -189,39 +189,6 @@ pipeline {
             }
         }
     }
-stage('Deploy React Container') {
-
-    when {
-        expression { params.ACTION == 'apply' }
-    }
-
-    steps {
-
-        sh '''
-        docker stop react-app || true
-        docker rm react-app || true
-
-        docker run -d \
-        --name react-app \
-        -p 3000:3000 \
-        ravindrasingh45/frontend:v1
-        '''
-    }
-}
-
-stage('Verify React Deployment') {
-
-    when {
-        expression { params.ACTION == 'apply' }
-    }
-
-    steps {
-
-        sh '''
-        docker ps -al
-        '''
-    }
-}
     post {
 
         success {
