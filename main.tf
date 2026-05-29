@@ -5,7 +5,7 @@ resource "aws_instance" "frontend" {
   subnet_id              = aws_subnet.public_1.id
   vpc_security_group_ids = [aws_security_group.frontend_sg.id]
 
-  user_data = filebase64("${path.module}/userf-data.sh")
+  user_data = file("${path.module}/userf-data.sh")
 
   user_data_replace_on_change = true
 
