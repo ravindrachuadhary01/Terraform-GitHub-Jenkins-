@@ -22,7 +22,7 @@ resource "aws_security_group" "sg" {
     description = "FLASK"
     from_port   = 5000
     to_port     = 500
-    protocol    = "custom TCP"
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
