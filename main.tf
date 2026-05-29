@@ -1,43 +1,55 @@
 locals {
   frontend_user_data = <<-EOF
 #!/bin/bash
-set -e
+set -ex
+exec > /var/log/user-data.log 2>&1
 
 apt update -y
-apt install -y docker.io awscli
+apt install -y docker.io
 
-systemctl start docker
 systemctl enable docker
+systemctl start docker
+
+until systemctl is-active --quiet docker; do
+  sleep 2
+done
 
 docker rm -f frontend || true
 
 docker pull 192902842773.dkr.ecr.ap-south-1.amazonaws.com/frontend-repo:latest
 
 docker run -d \
---name frontend \
--p 8080:80 \
-192902842773.dkr.ecr.ap-south-1.amazonaws.com/frontend-repo:latest
+  --restart always \
+  --name frontend \
+  -p 8080:80 \
+  192902842773.dkr.ecr.ap-south-1.amazonaws.com/frontend-repo:latest
 EOF
 
 
   backend_user_data = <<-EOF
 #!/bin/bash
-set -e
+set -ex
+exec > /var/log/user-data.log 2>&1
 
 apt update -y
-apt install -y docker.io awscli
+apt install -y docker.io
 
-systemctl start docker
 systemctl enable docker
+systemctl start docker
+
+until systemctl is-active --quiet docker; do
+  sleep 2
+done
 
 docker rm -f flask-app || true
 
 docker pull 192902842773.dkr.ecr.ap-south-1.amazonaws.com/flask-backend:latest
 
 docker run -d \
---name flask-app \
--p 5000:5000 \
-192902842773.dkr.ecr.ap-south-1.amazonaws.com/flask-backend:latest
+  --restart always \
+  --name flask-app \
+  -p 5000:5000 \
+  192902842773.dkr.ecr.ap-south-1.amazonaws.com/flask-backend:latest
 EOF
 }
 resource "aws_instance" "ec2" {
