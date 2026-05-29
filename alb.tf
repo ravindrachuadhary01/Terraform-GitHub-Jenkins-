@@ -31,7 +31,7 @@ resource "aws_lb_target_group" "tg" {
 #aws_lb_target_group_attachment
 resource "aws_lb_target_group_attachment" "flask_attach" {
   target_group_arn = aws_lb_target_group.tg.arn
-  target_id        = aws_instance.private_app_1.id
+  target_id        = i-0da165d90e53709bf
   port             = 5000
 }
 # Listener
