@@ -1,9 +1,8 @@
 resource "aws_instance" "ec2" {
   count = 2
-
-  # Ubuntu 22.04 AMI (ap-south-1)
   ami           = "ami-03f4878755434977f"
   instance_type = "t3.micro"
+  key_name = "three-tier-key"
 
   # First instance -> Public subnet
   # Second instance -> Private subnet
@@ -66,8 +65,8 @@ resource "aws_security_group" "backend_sg" {
   vpc_id = aws_vpc.main.id
 
   ingress {
-    from_port       = 80
-    to_port         = 80
+    from_port       = 5000
+    to_port         = 5000
     protocol        = "tcp"
     security_groups = [aws_security_group.frontend_sg.id]
   }
@@ -79,6 +78,7 @@ resource "aws_security_group" "backend_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
 # -------------------------
 # RDS SECURITY GROUP (FIXED)
 # -------------------------
