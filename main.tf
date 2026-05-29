@@ -7,6 +7,9 @@ exec > /var/log/user-data.log 2>&1
 apt update -y
 apt install -y docker.io
 
+apt update -y
+apt install -y docker.io awscli
+
 systemctl enable docker
 systemctl start docker
 
@@ -15,6 +18,9 @@ until systemctl is-active --quiet docker; do
 done
 
 docker rm -f frontend || true
+
+aws ecr get-login-password --region ap-south-1 \
+| docker login --username AWS --password-stdin 192902842773.dkr.ecr.ap-south-1.amazonaws.com
 
 docker pull 192902842773.dkr.ecr.ap-south-1.amazonaws.com/frontend-repo:latest
 
@@ -34,6 +40,9 @@ exec > /var/log/user-data.log 2>&1
 apt update -y
 apt install -y docker.io
 
+apt update -y
+apt install -y docker.io awscli
+
 systemctl enable docker
 systemctl start docker
 
@@ -42,6 +51,9 @@ until systemctl is-active --quiet docker; do
 done
 
 docker rm -f flask-app || true
+
+aws ecr get-login-password --region ap-south-1 \
+| docker login --username AWS --password-stdin 192902842773.dkr.ecr.ap-south-1.amazonaws.com
 
 docker pull 192902842773.dkr.ecr.ap-south-1.amazonaws.com/flask-backend:latest
 
@@ -57,6 +69,8 @@ resource "aws_instance" "ec2" {
   ami           = "ami-03f4878755434977f"
   instance_type = "t3.micro"
   key_name      = "three-tier-key"
+
+  iam_instance_profile = aws_iam_instance_profile.ec2_profile.name
 
   subnet_id = element([
     aws_subnet.public_1.id,
@@ -207,3 +221,28 @@ resource "aws_security_group" "alb_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
+resource "aws_iam_role" "ec2_ecr_role" {
+  name = "ec2-ecr-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "ec2.amazonaws.com"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ecr_access" {
+  role       = aws_iam_role.ec2_ecr_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+}
+resource "aws_iam_instance_profile" "ec2_profile" {
+  name = "ec2-ecr-profile"
+  role = aws_iam_role.ec2_ecr_role.name
+}
+
