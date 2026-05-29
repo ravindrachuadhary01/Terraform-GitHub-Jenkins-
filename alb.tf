@@ -35,7 +35,7 @@ resource "aws_lb_target_group" "tg" {
     unhealthy_threshold = 2
   }
 }
- 
+}
 # aws_lb_target_group_attachment
 
 resource "aws_lb_target_group_attachment" "backend_attach" {
