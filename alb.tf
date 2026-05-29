@@ -1,6 +1,8 @@
 # -------------------------
 # APPLICATION LOAD BALANCER
 # -------------------------
+
+
 resource "aws_lb" "alb" {
   name               = "app-alb"
   internal           = false
@@ -14,9 +16,13 @@ resource "aws_lb" "alb" {
   security_groups = [aws_security_group.sg.id]
 }
 
+
+
 # -------------------------
 # FRONTEND TARGET GROUP (React - Podman 8080)
 # -------------------------
+
+
 resource "aws_lb_target_group" "frontend_tg" {
   name     = "frontend-tg"
   port     = 8080
@@ -34,9 +40,12 @@ resource "aws_lb_target_group" "frontend_tg" {
   }
 }
 
+
 # -------------------------
 # BACKEND TARGET GROUP (Flask - 5000)
 # -------------------------
+
+
 resource "aws_lb_target_group" "backend_tg" {
   name     = "backend-tg"
   port     = 5000
@@ -44,7 +53,7 @@ resource "aws_lb_target_group" "backend_tg" {
   vpc_id   = aws_vpc.main.id
 
   health_check {
-    path                = "/"
+    path                = "/health"
     port                = "traffic-port"
     protocol            = "HTTP"
     interval            = 30
@@ -53,6 +62,8 @@ resource "aws_lb_target_group" "backend_tg" {
     unhealthy_threshold = 2
   }
 }
+
+
 
 # -------------------------
 # FRONTEND ATTACHMENT
@@ -63,6 +74,8 @@ resource "aws_lb_target_group_attachment" "frontend_attach" {
   port             = 8080
 }
 
+
+
 # -------------------------
 # BACKEND ATTACHMENT
 # -------------------------
@@ -71,6 +84,8 @@ resource "aws_lb_target_group_attachment" "backend_attach" {
   target_id        = aws_instance.ec2[1].id
   port             = 5000
 }
+
+
 
 # -------------------------
 # LISTENER (ALB :80)
@@ -81,15 +96,16 @@ resource "aws_lb_listener" "listener" {
   protocol          = "HTTP"
 
   default_action {
-    type = "fixed-response"
+    type = "forward"
 
-    fixed_response {
+    forward {
       content_type = "text/plain"
       message_body = "ALB is running"
       status_code  = "200"
     }
   }
 }
+
 
 # -------------------------
 # ROUTE: FRONTEND (/)
@@ -109,6 +125,8 @@ resource "aws_lb_listener_rule" "frontend_rule" {
     }
   }
 }
+
+
 
 # -------------------------
 # ROUTE: BACKEND (/api/*)
