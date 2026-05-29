@@ -4,9 +4,9 @@ function App() {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    fetch("/api/users")
-      .then((res) => res.json())
-      .then((data) => setUsers(data));
+   fetch("http://app-alb-1480368457.ap-south-1.elb.amazonaws.com/")
+  .then(res => res.text())
+  .then(data => console.log(data));
   }, []);
 
   return (
