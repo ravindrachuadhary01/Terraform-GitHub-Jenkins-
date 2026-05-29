@@ -96,9 +96,9 @@ resource "aws_lb_listener" "listener" {
   protocol          = "HTTP"
 
   default_action {
-    type = "forward"
+    type = "fixed-response"
 
-    forward {
+    fixed_response {
       content_type = "text/plain"
       message_body = "ALB is running"
       status_code  = "200"
