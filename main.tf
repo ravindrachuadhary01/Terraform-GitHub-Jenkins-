@@ -9,9 +9,6 @@ apt install -y docker.io awscli
 systemctl start docker
 systemctl enable docker
 
-aws ecr get-login-password --region ap-south-1 | \
-docker login --username AWS --password-stdin 192902842773.dkr.ecr.ap-south-1.amazonaws.com
-
 docker rm -f frontend || true
 
 docker pull 192902842773.dkr.ecr.ap-south-1.amazonaws.com/frontend-repo:latest
@@ -32,9 +29,6 @@ apt install -y docker.io awscli
 
 systemctl start docker
 systemctl enable docker
-
-aws ecr get-login-password --region ap-south-1 | \
-docker login --username AWS --password-stdin 192902842773.dkr.ecr.ap-south-1.amazonaws.com
 
 docker rm -f flask-app || true
 
