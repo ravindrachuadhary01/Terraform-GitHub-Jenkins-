@@ -31,7 +31,7 @@ resource "aws_lb_target_group" "frontend_tg" {
 
   health_check {
     path                = "/"
-    port                = "Override"
+    port                = "Over-ride"
     protocol            = "HTTP"
     interval            = 30
     timeout             = 15
@@ -54,7 +54,7 @@ resource "aws_lb_target_group" "backend_tg" {
 
   health_check {
     path                = "/health"
-    port                = "Override"
+    port                = "Over-ride"
     protocol            = "HTTP"
     interval            = 30
     timeout             = 15
