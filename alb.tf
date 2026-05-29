@@ -28,7 +28,12 @@ resource "aws_lb_target_group" "tg" {
     unhealthy_threshold = 2
   }
 }
-
+#aws_lb_target_group_attachment
+resource "aws_lb_target_group_attachment" "flask_attach" {
+  target_group_arn = aws_lb_target_group.tg.arn
+  target_id        = aws_instance.flask.id
+  port             = 5000
+}
 # Listener
 resource "aws_lb_listener" "listener" {
   load_balancer_arn = aws_lb.alb.arn
