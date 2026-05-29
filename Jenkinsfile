@@ -3,12 +3,9 @@ pipeline {
 
     environment {
         AWS_REGION = 'ap-south-1'
+        ECR_REPO   = 'flask-backend'
         ACCOUNT_ID = '192902842773'
-
-        BACKEND_REPO = 'flask-backend'
-        FRONTEND_REPO = 'frontend-repo'
-
-        IMAGE_TAG = 'latest'
+        IMAGE_TAG  = 'latest'
     }
 
     parameters {
@@ -30,101 +27,200 @@ pipeline {
 
         stage('Terraform Init') {
             steps {
-                sh 'terraform init'
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-creds'
+                ]]) {
+
+                    sh '''
+                    terraform init
+                    '''
+                }
             }
         }
 
         stage('Terraform Plan') {
             steps {
-                sh 'terraform plan'
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-creds'
+                ]]) {
+
+                    sh '''
+                    terraform plan
+                    '''
+                }
             }
         }
 
         stage('Terraform Apply / Destroy') {
             steps {
-                script {
-                    if (params.ACTION == 'apply') {
-                        sh 'terraform apply -auto-approve'
-                    } else {
-                        sh 'terraform destroy -auto-approve'
+
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-creds'
+                ]]) {
+
+                    script {
+
+                        if (params.ACTION == 'apply') {
+
+                            sh '''
+                            terraform apply -auto-approve
+                            '''
+
+                        } else {
+
+                            sh '''
+                            terraform destroy -auto-approve
+                            '''
+                        }
                     }
                 }
             }
         }
 
-        stage('Build Backend Image') {
-            when { expression { params.ACTION == 'apply' } }
+        stage('Build Docker Image') {
+
+            when {
+                expression { params.ACTION == 'apply' }
+            }
+
             steps {
+
                 dir('backend') {
-                    sh """
-                    docker build -t ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${BACKEND_REPO}:${IMAGE_TAG} .
-                    """
+
+                    sh '''
+                    docker build -t $ECR_REPO:$IMAGE_TAG .
+                    '''
                 }
             }
         }
 
-        stage('Build Frontend Image') {
-            when { expression { params.ACTION == 'apply' } }
+        stage('Login to AWS ECR') {
+
+            when {
+                expression { params.ACTION == 'apply' }
+            }
+
             steps {
-                dir('frontend') {
-                    sh """
-                    docker build -t ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${FRONTEND_REPO}:${IMAGE_TAG} .
-                    """
+
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-creds'
+                ]]) {
+
+                    sh '''
+                    aws ecr get-login-password --region $AWS_REGION | \
+                    docker login --username AWS --password-stdin \
+                    $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+                    '''
                 }
             }
         }
 
-        stage('Login to ECR') {
-            when { expression { params.ACTION == 'apply' } }
+        stage('Tag Docker Image') {
+
+            when {
+                expression { params.ACTION == 'apply' }
+            }
+
             steps {
-                sh """
-                aws ecr get-login-password --region ${AWS_REGION} | \
-                docker login --username AWS --password-stdin \
-                ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
-                """
+
+                sh '''
+                docker tag $ECR_REPO:$IMAGE_TAG \
+                $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
+                '''
             }
         }
 
-        stage('Push Images') {
-            when { expression { params.ACTION == 'apply' } }
+        stage('Push Docker Image to ECR') {
+
+            when {
+                expression { params.ACTION == 'apply' }
+            }
+
             steps {
-                sh """
-                docker push ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${BACKEND_REPO}:${IMAGE_TAG}
-                docker push ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${FRONTEND_REPO}:${IMAGE_TAG}
-                """
+
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: 'aws-creds'
+                ]]) {
+
+                    sh '''
+                    docker push \
+                    $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG
+                    '''
+                }
             }
         }
+1
+        stage('Deploy Flask Container') {
 
-        stage('Deploy Backend Container') {
-            when { expression { params.ACTION == 'apply' } }
+            when {
+                expression { params.ACTION == 'apply' }
+            }
+
             steps {
-                sh """
+
+                sh '''
                 docker stop flask-app || true
                 docker rm flask-app || true
 
                 docker run -d \
                 --name flask-app \
                 -p 5000:5000 \
-                ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${BACKEND_REPO}:${IMAGE_TAG}
-                """
+                192902842773.dkr.ecr.ap-south-1.amazonaws.com/flask-backend:latest
+                '''
+            }
+        }
+        stage('Deploy Frontend Container') {
+
+            when {
+                expression { params.ACTION == 'apply' }
+            }
+
+            steps {
+
+                sh '''
+                docker stop react-app || true
+                docker rm react-app || true
+
+                docker run -d \
+                --name react-app \
+                -p 5000:5000 \
+                192902842773.dkr.ecr.ap-south-1.amazonaws.com/frontend-repo:latest
+                '''
             }
         }
 
-        stage('Verify') {
-            when { expression { params.ACTION == 'apply' } }
+        stage('Verify Deployment') {
+
+            when {
+                expression { params.ACTION == 'apply' }
+            }
+
             steps {
-                sh 'docker ps'
+
+                sh '''
+                docker ps -al
+                '''
             }
         }
     }
-
     post {
+
         success {
-            echo "✅ PIPELINE SUCCESS - FULL 3 TIER DEPLOYED"
+
+            echo '✅ FULLY AUTOMATED 3-TIER PIPELINE SUCCESSFUL'
+            echo '✅ Terraform Infrastructure Created'
+            echo '✅ Docker Image Pushed to ECR'
+            echo '✅ Flask App Deployed Successfully'
         }
 
         failure {
-            echo "❌ PIPELINE FAILED - CHECK LOGS"
+
+            echo '❌ PIPELINE FAILED'
         }
     }
 }
