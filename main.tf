@@ -12,7 +12,12 @@ resource "aws_instance" "ec2" {
     aws_subnet.private_app_1.id
   ], count.index)
 
-  vpc_security_group_ids = [aws_security_group.sg.id]
+  # 🔥 FIX: separate security groups properly
+  vpc_security_group_ids = count.index == 0 ? [
+    aws_security_group.frontend_sg.id
+  ] : [
+    aws_security_group.backend_sg.id
+  ]
 
   # Public IP only for public instance
   associate_public_ip_address = count.index == 0 ? true : false
@@ -31,17 +36,18 @@ resource "aws_instance" "ec2" {
   }
 }
 
-# RDS Security Group (FIXED)
-resource "aws_security_group" "rds_sg" {
-  name   = "rds-sg"
+# -------------------------
+# FRONTEND SECURITY GROUP
+# -------------------------
+resource "aws_security_group" "frontend_sg" {
+  name   = "frontend-sg"
   vpc_id = aws_vpc.main.id
 
-  # Allow ONLY app security group (EC2/ASG)
   ingress {
-    from_port       = 3306
-    to_port         = 3306
-    protocol        = "tcp"
-    security_groups = [aws_security_group.sg.id]
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
@@ -52,7 +58,53 @@ resource "aws_security_group" "rds_sg" {
   }
 }
 
-# RDS Instance (FIXED connectivity settings)
+# -------------------------
+# BACKEND SECURITY GROUP (FOR ALB -> FLASK)
+# -------------------------
+resource "aws_security_group" "backend_sg" {
+  name   = "backend-sg"
+  vpc_id = aws_vpc.main.id
+
+  ingress {
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.sg.id] # ALB SG
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# -------------------------
+# RDS SECURITY GROUP (FIXED)
+# -------------------------
+resource "aws_security_group" "rds_sg" {
+  name   = "rds-sg"
+  vpc_id = aws_vpc.main.id
+
+  ingress {
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [aws_security_group.backend_sg.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# -------------------------
+# RDS INSTANCE (WORKING)
+# -------------------------
 resource "aws_db_instance" "mysql" {
   identifier         = "app-mysql-db"
   engine             = "mysql"

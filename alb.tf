@@ -28,6 +28,13 @@ resource "aws_lb_target_group" "tg" {
     unhealthy_threshold = 2
   }
 }
+# aws_lb_target_group_attachment
+
+resource "aws_lb_target_group_attachment" "backend_attach" {
+  target_group_arn = aws_lb_target_group.tg.arn
+  target_id        = aws_instance.ec2[1].id
+  port             = 80
+}
 
 # Listener
 resource "aws_lb_listener" "listener" {
