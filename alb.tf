@@ -15,22 +15,20 @@ resource "aws_lb" "alb" {
 # Target Group
 resource "aws_lb_target_group" "tg" {
   name     = "app-tg"
-  port     = 80
+  port     = 5000
   protocol = "HTTP"
   vpc_id   = aws_vpc.main.id
 
   health_check {
-    path                = "/"
-    protocol            = "HTTP"
-    interval            = 30
-    timeout             = 5
-    healthy_threshold   = 2
-    unhealthy_threshold = 2
+    path = "/"
+    port = "traffic-port"
   }
 }
+ 
 # aws_lb_target_group_attachment
 
 resource "aws_lb_target_group_attachment" "backend_attach" {
+  count            = 1
   target_group_arn = aws_lb_target_group.tg.arn
   target_id        = aws_instance.ec2[1].id
   port             = 80
