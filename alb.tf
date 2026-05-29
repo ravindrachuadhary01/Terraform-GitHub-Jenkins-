@@ -20,6 +20,7 @@ resource "aws_lb_target_group_attachment" "backend_attach" {
   target_group_arn = aws_lb_target_group.tg.arn
   target_id        = aws_instance.ec2[1].id
   port             = 5000
+  port             = 80
 }
 resource "aws_lb_target_group" "tg" {
   name     = "app-tg"
