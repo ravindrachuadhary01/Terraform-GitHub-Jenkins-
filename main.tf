@@ -1,6 +1,7 @@
 resource "aws_instance" "frontend" {
   ami           = "ami-03f4878755434977f"
   instance_type = "t3.micro"
+  key_name = "three-tier-key"
 
   subnet_id              = aws_subnet.public_1.id
   vpc_security_group_ids = [aws_security_group.frontend_sg.id]
@@ -13,9 +14,12 @@ resource "aws_instance" "frontend" {
     Name = "frontend"
   }
 }
+
+
 resource "aws_instance" "backend" {
   ami           = "ami-03f4878755434977f"
   instance_type = "t3.micro"
+  key_name = "three-tier-key"
 
   subnet_id              = aws_subnet.private_app_1.id
   vpc_security_group_ids = [aws_security_group.backend_sg.id]
