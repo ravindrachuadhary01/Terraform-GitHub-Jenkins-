@@ -31,10 +31,10 @@ resource "aws_lb_target_group" "frontend_tg" {
 
   health_check {
     path                = "/"
-    port                = "traffic-port"
+    port                = "Override"
     protocol            = "HTTP"
     interval            = 30
-    timeout             = 5
+    timeout             = 15
     healthy_threshold   = 2
     unhealthy_threshold = 2
   }
@@ -54,10 +54,10 @@ resource "aws_lb_target_group" "backend_tg" {
 
   health_check {
     path                = "/health"
-    port                = "traffic-port"
+    port                = "Override"
     protocol            = "HTTP"
     interval            = 30
-    timeout             = 5
+    timeout             = 15
     healthy_threshold   = 2
     unhealthy_threshold = 2
   }
@@ -96,16 +96,11 @@ resource "aws_lb_listener" "listener" {
   protocol          = "HTTP"
 
   default_action {
-    type = "fixed-response"
+    type = "forward"
 
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "ALB is running"
-      status_code  = "200"
-    }
+    target_group_arn = aws_lb_target_group.tg.arn
   }
 }
-
 
 # -------------------------
 # ROUTE: FRONTEND (/)
