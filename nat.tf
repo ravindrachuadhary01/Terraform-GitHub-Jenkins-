@@ -16,7 +16,7 @@ resource "aws_nat_gateway" "nat" {
   allocation_id = aws_eip.nat.id
 
   # ⚠️ IMPORTANT: change this if your subnet name is different
-  subnet_id = aws_subnet.public-subnet-2.id
+  subnet_id = aws_subnet.public_2.id
 
   depends_on = [aws_eip.nat]
 
