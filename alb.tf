@@ -70,7 +70,7 @@ resource "aws_lb_target_group" "backend_tg" {
 # -------------------------
 resource "aws_lb_target_group_attachment" "frontend_attach" {
   target_group_arn = aws_lb_target_group.frontend_tg.arn
-  target_id        = aws_instance.ec2[0].id
+  target_id        = aws_instance.frontend.id
   port             = 8080
 }
 
@@ -81,7 +81,7 @@ resource "aws_lb_target_group_attachment" "frontend_attach" {
 # -------------------------
 resource "aws_lb_target_group_attachment" "backend_attach" {
   target_group_arn = aws_lb_target_group.backend_tg.arn
-  target_id        = aws_instance.ec2[1].id
+  target_id        =aws_instance.backend.id
   port             = 5000
 }
 

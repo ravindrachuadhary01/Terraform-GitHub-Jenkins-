@@ -20,7 +20,7 @@ resource "aws_instance" "backend" {
   subnet_id              = aws_subnet.private_app_1.id
   vpc_security_group_ids = [aws_security_group.backend_sg.id]
 
-  user_data = filebase64("${path.module}/userb-data.sh")
+  user_data = file("${path.module}/userb-data.sh")
 
   user_data_replace_on_change = true
 
