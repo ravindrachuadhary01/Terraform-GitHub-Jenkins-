@@ -25,7 +25,7 @@ resource "aws_lb" "alb" {
 
 resource "aws_lb_target_group" "frontend_tg" {
   name     = "frontend-tg"
-  port     = 8080
+  port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.main.id
 
@@ -33,8 +33,8 @@ resource "aws_lb_target_group" "frontend_tg" {
     path                = "/"
     port                = "traffic-port"
     protocol            = "HTTP"
-    interval            = 30
-    timeout             = 15
+    interval            = 10
+    timeout             = 5
     healthy_threshold   = 2
     unhealthy_threshold = 2
   }
@@ -56,7 +56,7 @@ resource "aws_lb_target_group" "backend_tg" {
     path                = "/health"
     port                = "traffic-port"
     protocol            = "HTTP"
-    interval            = 30
+    interval            = 10
     timeout             = 15
     healthy_threshold   = 2
     unhealthy_threshold = 2
@@ -71,7 +71,7 @@ resource "aws_lb_target_group" "backend_tg" {
 resource "aws_lb_target_group_attachment" "frontend_attach" {
   target_group_arn = aws_lb_target_group.frontend_tg.arn
   target_id        = aws_instance.frontend.id
-  port             = 8080
+  port             = 80
 }
 
 

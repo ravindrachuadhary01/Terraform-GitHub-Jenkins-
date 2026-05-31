@@ -1,10 +1,46 @@
+resource "aws_iam_role" "ec2_role" {
+  name = "ec2-ecr-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+
+    Statement = [{
+      Effect = "Allow"
+
+      Principal = {
+        Service = "ec2.amazonaws.com"
+      }
+
+      Action = "sts:AssumeRole"
+    }]
+  })
+}
+resource "aws_iam_role_policy_attachment" "ecr_policy" {
+  role       = aws_iam_role.ec2_role.name
+
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+}
+resource "aws_iam_instance_profile" "ec2_profile" {
+  name = "ec2-profile"
+
+  role = aws_iam_role.ec2_role.name
+}
+
+
 resource "aws_instance" "frontend" {
+
   ami           = "ami-03f4878755434977f"
   instance_type = "t3.micro"
+
   key_name = "three-tier-key"
 
-  subnet_id              = aws_subnet.public_1.id
-  vpc_security_group_ids = [aws_security_group.frontend_sg.id]
+  subnet_id = aws_subnet.public_1.id
+
+  vpc_security_group_ids = [
+    aws_security_group.frontend_sg.id
+  ]
+
+  iam_instance_profile = aws_iam_instance_profile.ec2_profile.name
 
   user_data = file("${path.module}/userf-data.sh")
 
@@ -17,12 +53,19 @@ resource "aws_instance" "frontend" {
 
 
 resource "aws_instance" "backend" {
+
   ami           = "ami-03f4878755434977f"
   instance_type = "t3.micro"
+
   key_name = "three-tier-key"
 
-  subnet_id              = aws_subnet.private_app_1.id
-  vpc_security_group_ids = [aws_security_group.backend_sg.id]
+  subnet_id = aws_subnet.private_app_1.id
+
+  vpc_security_group_ids = [
+    aws_security_group.backend_sg.id
+  ]
+
+  iam_instance_profile = aws_iam_instance_profile.ec2_profile.name
 
   user_data = file("${path.module}/userb-data.sh")
 
@@ -161,29 +204,5 @@ resource "aws_security_group" "alb_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-}
-
-resource "aws_iam_role" "ec2_ecr_role" {
-  name = "ec2-ecr-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = {
-        Service = "ec2.amazonaws.com"
-      }
-      Action = "sts:AssumeRole"
-    }]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "ecr_access" {
-  role       = aws_iam_role.ec2_ecr_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-}
-resource "aws_iam_instance_profile" "ec2_profile" {
-  name = "ec2-ecr-profile"
-  role = aws_iam_role.ec2_ecr_role.name
 }
 
