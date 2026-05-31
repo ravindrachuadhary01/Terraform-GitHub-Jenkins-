@@ -1,47 +1,44 @@
 #!/bin/bash
 
-# Save logs
+# Logs
 
 exec > /var/log/user-data.log 2>&1
 
-# Wait for boot
-
-sleep 30
-
-# Update packages
+# Update
 
 apt update -y
 
-# Install Docker + AWS CLI
+# Install Docker
 
-apt install -y docker.io awscli
-
-# Start Docker
+apt install docker.io -y
 
 systemctl start docker
 systemctl enable docker
 
-# Docker permission
+# Install AWS CLI
 
-usermod -aG docker ubuntu
+apt install awscli -y
 
-# Wait for IAM credentials
+# Wait a little for IAM Role
 
 sleep 20
 
 # Login to ECR
 
-aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 192902842773.dkr.ecr.ap-south-1.amazonaws.com
+aws ecr get-login-password --region ap-south-1 | 
+docker login 
+--username AWS 
+--password-stdin 192902842773.dkr.ecr.ap-south-1.amazonaws.com
 
-# Pull image
+# Pull Backend Image
 
 docker pull 192902842773.dkr.ecr.ap-south-1.amazonaws.com/flask-backend:latest
 
-# Remove old container
+# Remove old container if exists
 
 docker rm -f backend || true
 
-# Run container
+# Run Backend Container
 
 docker run -d 
 --name backend 
