@@ -11,8 +11,7 @@ resource "aws_lb" "alb" {
 
   subnets = [
     aws_subnet.public_1.id,
-    aws_subnet.public_2.id,
-    data.aws_subnets.public.ids 
+    aws_subnet.public_2.id
   ]
 
   security_groups = [aws_security_group.sg.id]

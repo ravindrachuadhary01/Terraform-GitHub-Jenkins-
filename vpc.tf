@@ -107,10 +107,3 @@ resource "aws_route_table_association" "public_2_assoc" {
   route_table_id = aws_route_table.public_rt.id
 }
 
-
-data "aws_subnets" "public" {
-  filter {
-    name   = "tag:Type"
-    values = ["public"]
-  }
-}
