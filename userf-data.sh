@@ -39,4 +39,3 @@ docker run -d \
 --restart always \
 192902842773.dkr.ecr.ap-south-1.amazonaws.com/frontend-repo:latest
 
-#update nginx config
