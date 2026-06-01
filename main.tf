@@ -28,24 +28,6 @@ resource "aws_iam_instance_profile" "ec2_profile" {
   role = aws_iam_role.ec2_role.name
 }
 
-resource "aws_eip" "backend_eip" {
-  domain = "vpc"
-}
-
-resource "aws_eip_association" "backend_eip_assoc" {
-  instance_id   = aws_instance.backend.id
-  allocation_id = aws_eip.backend_eip.id
-}
-
-
-resource "aws_eip" "frontend_eip" {
-  domain = "vpc"
-}
-resource "aws_eip_association" "frontend_eip_assoc" {
-  instance_id   = aws_instance.frontend.id
-  allocation_id = aws_eip.frontend_eip.id
-}
-
 resource "aws_instance" "frontend" {
 
   ami           = "ami-03f4878755434977f"
