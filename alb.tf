@@ -148,7 +148,7 @@ resource "aws_lb_listener_rule" "backend_rule" {
 }
 
 
-resource "aws_lb_listener_rule" "backend_rule" {
+resource "aws_lb_listener_rule" "backend_rule1" {
   listener_arn = aws_lb_listener.listener.arn
   priority     = 2
 
@@ -166,7 +166,7 @@ resource "aws_lb_listener_rule" "backend_rule" {
 
 
 
-resource "aws_lb_listener_rule" "backend_rule" {
+resource "aws_lb_listener_rule" "backend_rule2" {
   listener_arn = aws_lb_listener.listener.arn
   priority     = 3
 
