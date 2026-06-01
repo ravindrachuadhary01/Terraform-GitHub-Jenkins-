@@ -114,4 +114,3 @@ data "aws_subnets" "public" {
     values = ["public"]
   }
 }
-subnets = data.aws_subnets.public.ids
