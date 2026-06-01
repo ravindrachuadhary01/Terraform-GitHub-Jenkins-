@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./App.css";
 
-const API_URL = "http://app-alb-555935971.ap-south-1.elb.amazonaws.com/";
+const API_URL = "http://";
 
 export default function App() {
   const [page, setPage] = useState("login");
@@ -69,7 +69,7 @@ export default function App() {
     <div className="app">
       {page === "login" && (
         <div className="card glass">
-          <h1>LOGIN PAGE</h1>
+          <h1>Login</h1>
 
           <input
             type="text"
@@ -105,7 +105,7 @@ export default function App() {
 
       {page === "register" && (
         <div className="card glass">
-          <h1>REGISTER PAGE</h1>
+          <h1>Register</h1>
 
           <input
             type="text"
