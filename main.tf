@@ -51,8 +51,11 @@ resource "aws_instance" "frontend" {
   }
 }
 
-
 resource "aws_instance" "backend" {
+
+  depends_on = [
+    aws_nat_gateway.nat
+  ]
 
   ami           = "ami-03f4878755434977f"
   instance_type = "t3.micro"
