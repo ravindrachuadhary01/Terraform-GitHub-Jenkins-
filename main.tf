@@ -54,7 +54,7 @@ resource "aws_instance" "frontend" {
   key_name = "three-tier-key"
 
   subnet_id = aws_subnet.public_1.id
-x
+
   vpc_security_group_ids = [
     aws_security_group.frontend_sg.id
   ]
