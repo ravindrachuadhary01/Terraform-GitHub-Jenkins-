@@ -7,6 +7,7 @@ resource "aws_lb" "alb" {
   name               = "app-alb"
   internal           = false
   load_balancer_type = "application"
+  subnets = data.aws_subnets.public.ids 
 
   subnets = [
     aws_subnet.public_1.id,
