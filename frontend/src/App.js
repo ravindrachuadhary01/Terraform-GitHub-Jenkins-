@@ -69,7 +69,7 @@ export default function App() {
     <div className="app">
       {page === "login" && (
         <div className="card glass">
-          <h1>Login</h1>
+          <h1>login page</h1>
 
           <input
             type="text"
