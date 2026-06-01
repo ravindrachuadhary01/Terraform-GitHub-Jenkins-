@@ -148,7 +148,7 @@ resource "aws_lb_listener_rule" "backend_rule" {
 }
 
 
-resource "aws_lb_listener_rule" "backend_rule" {
+resource "aws_lb_listener_rule" "login_rule" {
   listener_arn = aws_lb_listener.listener.arn
   priority     = 20
 
@@ -166,7 +166,7 @@ resource "aws_lb_listener_rule" "backend_rule" {
 
 
 
-resource "aws_lb_listener_rule" "backend_rule" {
+resource "aws_lb_listener_rule" "register_rule" {
   listener_arn = aws_lb_listener.listener.arn
   priority     = 30
 
