@@ -16,7 +16,7 @@ export default function App() {
 
   // 🔥 REGISTER API
   const register = async () => {
-    const res = await fetch("http:10.0.3.242:5000/register", {
+    const res = await fetch("http://10.0.3.187:5000/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form)
@@ -33,7 +33,7 @@ export default function App() {
 
   // 🔥 LOGIN API
   const login = async () => {
-    const res = await fetch("10.0.3.242:5000/login", {
+    const res = await fetch("http://10.0.3.187:5000/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form)
