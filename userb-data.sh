@@ -46,3 +46,14 @@ docker run -d \
 192902842773.dkr.ecr.ap-south-1.amazonaws.com/flask-backend:latest
 
 echo "Done!"
+
+apt update -y
+apt install -y mysql-client
+
+mysql -h app-mysql-db.cr04wsu2e9r0.ap-south-1.rds.amazonaws.com \
+-u admin \
+-pAdmin12345 <<EOF
+
+CREATE DATABASE IF NOT EXISTS appdb;
+
+EOF
