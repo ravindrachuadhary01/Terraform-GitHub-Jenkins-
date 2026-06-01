@@ -1,23 +1,131 @@
-import { useEffect, useState } from "react";
+import React, { useState } from "react";
+import "./App.css";
 
-function App() {
-  const [users, setUsers] = useState([]);
+export default function App() {
+  const [page, setPage] = useState("login");
+  const [message, setMessage] = useState("");
 
-  useEffect(() => {
-   fetch("http://app-alb-1480368457.ap-south-1.elb.amazonaws.com/")
-  .then(res => res.text())
-  .then(data => console.log(data));
-  }, []);
+  const [form, setForm] = useState({
+    username: "",
+    password: ""
+  });
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  // 🔥 REGISTER API
+  const register = async () => {
+    const res = await fetch("http://YOUR_BACKEND_IP:5000/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form)
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      setMessage("🎉 Registration Successful!");
+      setPage("registerSuccess");
+    } else {
+      setMessage(data.message || "Register Failed");
+    }
+  };
+
+  // 🔥 LOGIN API
+  const login = async () => {
+    const res = await fetch("http://YOUR_BACKEND_IP:5000/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form)
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      setMessage("🚀 Login Successful!");
+      setPage("loginSuccess");
+    } else {
+      setMessage(data.message || "Login Failed");
+    }
+  };
 
   return (
-    <div>
-      <h1>Users Welcome ,Update successfully done</h1>
+    <div className="app">
 
-      {users.map((u, i) => (
-        <p key={i}>{u.name}</p>
-      ))}
+      {/* LOGIN PAGE */}
+      {page === "login" && (
+        <div className="card glass">
+          <h1>Login</h1>
+
+          <input
+            name="username"
+            placeholder="Username"
+            onChange={handleChange}
+          />
+
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            onChange={handleChange}
+          />
+
+          <button onClick={login}>Login</button>
+
+          <p onClick={() => setPage("register")}>
+            New user? Register
+          </p>
+
+          <div className="msg">{message}</div>
+        </div>
+      )}
+
+      {/* REGISTER PAGE */}
+      {page === "register" && (
+        <div className="card glass">
+          <h1>Register</h1>
+
+          <input
+            name="username"
+            placeholder="Username"
+            onChange={handleChange}
+          />
+
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            onChange={handleChange}
+          />
+
+          <button onClick={register}>Register</button>
+
+          <p onClick={() => setPage("login")}>
+            Already have account? Login
+          </p>
+
+          <div className="msg">{message}</div>
+        </div>
+      )}
+
+      {/* SUCCESS REGISTER */}
+      {page === "registerSuccess" && (
+        <div className="success">
+          🎉 Successfully Registered!
+          <button onClick={() => setPage("login")}>
+            Go to Login
+          </button>
+        </div>
+      )}
+
+      {/* SUCCESS LOGIN */}
+      {page === "loginSuccess" && (
+        <div className="success">
+          🚀 Login Successful!
+          <button onClick={() => setPage("login")}>
+            Logout
+          </button>
+        </div>
+      )}
     </div>
   );
 }
-
-export default App;
