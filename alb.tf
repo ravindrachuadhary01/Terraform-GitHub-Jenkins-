@@ -150,7 +150,7 @@ resource "aws_lb_listener_rule" "backend_rule" {
 
 resource "aws_lb_listener_rule" "backend_rule" {
   listener_arn = aws_lb_listener.listener.arn
-  priority     = 2
+  priority     = 20
 
   action {
     type             = "forward"
@@ -168,7 +168,7 @@ resource "aws_lb_listener_rule" "backend_rule" {
 
 resource "aws_lb_listener_rule" "backend_rule" {
   listener_arn = aws_lb_listener.listener.arn
-  priority     = 3
+  priority     = 30
 
   action {
     type             = "forward"
