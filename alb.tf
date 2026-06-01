@@ -112,7 +112,7 @@ resource "aws_lb_listener" "listener" {
 # -------------------------
 resource "aws_lb_listener_rule" "frontend_rule" {
   listener_arn = aws_lb_listener.listener.arn
-  priority     = 1
+  priority     = 100
 
   action {
     type             = "forward"
@@ -129,11 +129,11 @@ resource "aws_lb_listener_rule" "frontend_rule" {
 
 
 # -------------------------
-# ROUTE: BACKEND (/api/*)
+# ROUTE: BACKEND (/health)
 # -------------------------
 resource "aws_lb_listener_rule" "backend_rule" {
   listener_arn = aws_lb_listener.listener.arn
-  priority     = 2
+  priority     = 1
 
   action {
     type             = "forward"
@@ -142,7 +142,46 @@ resource "aws_lb_listener_rule" "backend_rule" {
 
   condition {
     path_pattern {
-      values = ["/api/*"]
+      values = ["/health"]
     }
   }
 }
+
+
+resource "aws_lb_listener_rule" "backend_rule" {
+  listener_arn = aws_lb_listener.listener.arn
+  priority     = 1
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.backend_tg.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/Login"]
+    }
+  }
+}
+
+
+
+resource "aws_lb_listener_rule" "backend_rule" {
+  listener_arn = aws_lb_listener.listener.arn
+  priority     = 1
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.backend_tg.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/register"]
+    }
+  }
+}
+
+
+
+
