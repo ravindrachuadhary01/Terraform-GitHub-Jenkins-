@@ -256,41 +256,4 @@ pipeline {
 
 
 
-        stage('Push to ECR') {
-            steps {
-                sh '''
-                docker push 192902842773.dkr.ecr.ap-south-1.amazonaws.com/frontend-repo:latest
-                docker push 192902842773.dkr.ecr.ap-south-1.amazonaws.com/flask-backend:latest
-                '''
-            }
-        }
-
-        stage('Deploy Frontend') {
-            steps {
-                sh '''
-                ssh ubuntu@FRONTEND_EC2 "
-                docker pull 192902842773.dkr.ecr.ap-south-1.amazonaws.com/frontend-repo:latest &&
-                docker stop react-app || true &&
-                docker rm react-app || true &&
-                docker run -d --name react-app -p 80:80 \
-                192902842773.dkr.ecr.ap-south-1.amazonaws.com/frontend-repo:latest
-                "
-                '''
-            }
-        }
-
-        stage('Deploy Backend') {
-            steps {
-                sh '''
-                ssh ubuntu@BACKEND_EC2 "
-                docker pull 192902842773.dkr.ecr.ap-south-1.amazonaws.com/flask-backend:latest &&
-                docker stop backend || true &&
-                docker rm backend || true &&
-                docker run -d --name backend -p 5000:5000 \
-                192902842773.dkr.ecr.ap-south-1.amazonaws.com/flask-backend:latest
-                "
-                '''
-            }
-        }
-    }
-}
+       
