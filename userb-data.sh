@@ -19,7 +19,7 @@ systemctl enable docker
 
 apt install awscli -y
 
-# Wait a little for IAM Role
+# Wait a little
 
 sleep 20
 

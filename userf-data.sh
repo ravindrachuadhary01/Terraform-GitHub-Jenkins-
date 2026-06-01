@@ -12,6 +12,8 @@ apt install docker.io -y
 systemctl start docker
 systemctl enable docker
 
+usermod -aG docker ubuntu
+
 # Install AWS CLI
 apt install awscli -y
 
