@@ -20,13 +20,10 @@ resource "aws_iam_role_policy_attachment" "ecr_policy" {
 
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
-resource "aws_iam_instance_profile" "ec2_profile" {
-  name = "ec2-profile"
 
-  role = aws_iam_role.ec2_role.name
+resource "aws_eip" "frontend_eip" {
+  domain = "vpc"
 }
-
-
 resource "aws_instance" "frontend" {
 
   ami           = "ami-03f4878755434977f"
@@ -96,13 +93,6 @@ ingress {
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]   
-}
-ingress {
-    from_port   = 8080
-    to_port     = 8080
-    protocol    = "tcp"
-    security_groups = [aws_security_group.alb_sg.id]
-    
 }
   egress {
     from_port   = 0
