@@ -211,7 +211,7 @@ pipeline {
                 sh '''
                 docker stop react-app || true
                 docker rm react-app || true
-
+                
                 docker rmi -f 192902842773.dkr.ecr.ap-south-1.amazonaws.com/frontend-repo:latest || true
 
                 docker pull 192902842773.dkr.ecr.ap-south-1.amazonaws.com/frontend-repo:latest
@@ -238,29 +238,8 @@ pipeline {
                 '''
             }
         }
-         stage('Get ALB DNS') {
-            steps {
-                sh '''
-                echo "Fetching ALB DNS..."
-                aws elbv2 describe-load-balancers \
-                --query "LoadBalancers[*].DNSName" \
-                --output text
-                '''
-            }
-        }
-
-        stage('Verify HTTPS Domain') {
-            steps {
-                sh '''
-                echo "Your app should be available at:"
-                echo "https://api.myapp.com"
-                '''
-            }
-        }
     }
 
-    }
-     
     post {
 
         success {
