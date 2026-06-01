@@ -2,13 +2,14 @@ pipeline {
     agent any
 
     environment {
-        AWS_REGION        = 'ap-south-1'
-        ACCOUNT_ID        = '192902842773'
+        AWS_REGION   = 'ap-south-1'
+        ACCOUNT_ID   = '192902842773'
 
-        BACKEND_REPO      = 'flask-backend'
-        FRONTEND_REPO     = 'frontend-repo'
+        BACKEND_REPO  = 'flask-backend'
+        FRONTEND_REPO = 'frontend-repo'
 
-        IMAGE_TAG         = 'latest'
+        // 🔥 BEST PRACTICE: unique build per commit
+        IMAGE_TAG     = "${BUILD_NUMBER}"
     }
 
     parameters {
@@ -30,232 +31,174 @@ pipeline {
 
         stage('Terraform Init') {
             steps {
-                withCredentials([[
+                withCredentials([[ 
                     $class: 'AmazonWebServicesCredentialsBinding',
                     credentialsId: 'aws-creds'
                 ]]) {
-
-                    sh '''
-                    terraform init
-                    '''
+                    sh 'terraform init'
                 }
             }
         }
 
         stage('Terraform Plan') {
             steps {
-                withCredentials([[
+                withCredentials([[ 
                     $class: 'AmazonWebServicesCredentialsBinding',
                     credentialsId: 'aws-creds'
                 ]]) {
-
-                    sh '''
-                    terraform plan
-                    '''
+                    sh 'terraform plan'
                 }
             }
         }
 
         stage('Terraform Apply / Destroy') {
             steps {
-
-                withCredentials([[
+                withCredentials([[ 
                     $class: 'AmazonWebServicesCredentialsBinding',
                     credentialsId: 'aws-creds'
                 ]]) {
 
                     script {
-
                         if (params.ACTION == 'apply') {
-
-                            sh '''
-                            terraform apply -auto-approve
-                            '''
-
+                            sh 'terraform apply -auto-approve'
                         } else {
-
-                            sh '''
-                            terraform destroy -auto-approve
-                            '''
+                            sh 'terraform destroy -auto-approve'
                         }
                     }
                 }
             }
         }
 
-        stage('Build Backend Docker Image') {
-
+        stage('Build Backend Image') {
             when {
                 expression { params.ACTION == 'apply' }
             }
-
             steps {
-
                 dir('backend') {
-
-                    sh '''
+                    sh """
                     docker build -t $BACKEND_REPO:$IMAGE_TAG .
-                    '''
+                    """
                 }
             }
         }
 
-        stage('Build Frontend Docker Image') {
-
+        stage('Build Frontend Image') {
             when {
                 expression { params.ACTION == 'apply' }
             }
-
             steps {
-
                 dir('frontend') {
-
-                    sh '''
+                    sh """
                     docker build -t $FRONTEND_REPO:$IMAGE_TAG .
-                    '''
+                    """
                 }
             }
         }
 
         stage('Login to AWS ECR') {
-
             when {
                 expression { params.ACTION == 'apply' }
             }
-
             steps {
-
-                withCredentials([[
+                withCredentials([[ 
                     $class: 'AmazonWebServicesCredentialsBinding',
                     credentialsId: 'aws-creds'
                 ]]) {
-
-                    sh '''
+                    sh """
                     aws ecr get-login-password --region $AWS_REGION | \
                     docker login --username AWS --password-stdin \
                     $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
-                    '''
+                    """
                 }
             }
         }
 
-        stage('Tag Docker Images') {
-
+        stage('Tag Images for ECR') {
             when {
                 expression { params.ACTION == 'apply' }
             }
-
             steps {
-
-                sh '''
+                sh """
                 docker tag $BACKEND_REPO:$IMAGE_TAG \
                 $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$BACKEND_REPO:$IMAGE_TAG
 
                 docker tag $FRONTEND_REPO:$IMAGE_TAG \
                 $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$FRONTEND_REPO:$IMAGE_TAG
-                '''
+                """
             }
         }
 
-        stage('Push Docker Images') {
-
+        stage('Push Images to ECR') {
             when {
                 expression { params.ACTION == 'apply' }
             }
-
             steps {
-
-                sh '''
-                docker push \
-                $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$BACKEND_REPO:$IMAGE_TAG
-
-                docker push \
-                $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$FRONTEND_REPO:$IMAGE_TAG
-                '''
+                sh """
+                docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$BACKEND_REPO:$IMAGE_TAG
+                docker push $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$FRONTEND_REPO:$IMAGE_TAG
+                """
             }
         }
 
-        stage('Deploy Flask Container') {
-
+        stage('Deploy Backend') {
             when {
                 expression { params.ACTION == 'apply' }
             }
-
             steps {
-
-                sh '''
+                sh """
                 docker stop flask-app || true
                 docker rm flask-app || true
-                docker rmi -f 192902842773.dkr.ecr.ap-south-1.amazonaws.com/flask-backend:latest || true
 
-                docker pull 192902842773.dkr.ecr.ap-south-1.amazonaws.com/flask-backend:latest
+                docker pull $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$BACKEND_REPO:$IMAGE_TAG
 
                 docker run -d \
                 --name flask-app \
                 -p 5000:5000 \
-               192902842773.dkr.ecr.ap-south-1.amazonaws.com/flask-backend:latest
-                '''
+                --restart always \
+                $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$BACKEND_REPO:$IMAGE_TAG
+                """
             }
         }
 
-        stage('Deploy React Container') {
-
+        stage('Deploy Frontend') {
             when {
                 expression { params.ACTION == 'apply' }
             }
-
             steps {
-
-                sh '''
+                sh """
                 docker stop react-app || true
                 docker rm react-app || true
-                docker rmi -f 192902842773.dkr.ecr.ap-south-1.amazonaws.com/frontend-repo:latest || true
 
-                docker pull 192902842773.dkr.ecr.ap-south-1.amazonaws.com/frontend-repo:latest
+                docker pull $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$FRONTEND_REPO:$IMAGE_TAG
 
                 docker run -d \
                 --name react-app \
                 -p 3000:3000 \
-               192902842773.dkr.ecr.ap-south-1.amazonaws.com/frontend-repo:latest
-                '''
+                --restart always \
+                $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$FRONTEND_REPO:$IMAGE_TAG
+                """
             }
         }
 
         stage('Verify Deployment') {
-
             when {
                 expression { params.ACTION == 'apply' }
             }
-
             steps {
-
-                sh '''
-                docker image prune -f
+                sh """
                 docker ps -a
-                '''
+                """
             }
         }
     }
 
     post {
-
         success {
-
-            echo '✅ FULLY AUTOMATED 3-TIER PIPELINE SUCCESSFUL'
-            echo '✅ Terraform Infrastructure Created'
-            echo '✅ Docker Images Pushed to ECR'
-            echo '✅ Flask App Deployed Successfully'
-            echo '✅ React App Deployed Successfully'
+            echo '✅ FULLY AUTOMATED CI/CD PIPELINE SUCCESSFUL'
         }
 
         failure {
-
             echo '❌ PIPELINE FAILED'
         }
     }
 }
-
-
-
-
-       
