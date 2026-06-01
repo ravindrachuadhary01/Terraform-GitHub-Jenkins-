@@ -186,6 +186,7 @@ pipeline {
                 sh '''
                 docker stop flask-app || true
                 docker rm flask-app || true
+                docker rmi -f 192902842773.dkr.ecr.ap-south-1.amazonaws.com/flask-backend:latest || true
 
                 docker pull 192902842773.dkr.ecr.ap-south-1.amazonaws.com/flask-backend:latest
 
@@ -208,6 +209,7 @@ pipeline {
                 sh '''
                 docker stop react-app || true
                 docker rm react-app || true
+                docker rmi -f 192902842773.dkr.ecr.ap-south-1.amazonaws.com/frontend-repo:latest || true
 
                 docker pull 192902842773.dkr.ecr.ap-south-1.amazonaws.com/frontend-repo:latest
 
