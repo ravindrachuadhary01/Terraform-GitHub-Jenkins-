@@ -1,64 +1,81 @@
 import React, { useState } from "react";
 import "./App.css";
 
+const API_URL = "http://app-alb-1630608787.ap-south-1.elb.amazonaws.com";
+
 export default function App() {
   const [page, setPage] = useState("login");
   const [message, setMessage] = useState("");
 
   const [form, setForm] = useState({
     username: "",
-    password: ""
+    password: "",
   });
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
   };
 
-  // 🔥 REGISTER API
   const register = async () => {
-    const res = await fetch("http://10.0.3.210:5000/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form)
-    });
+    try {
+      const res = await fetch(`${API_URL}/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form),
+      });
 
-    const data = await res.json();
-    if (res.ok) {
-      setMessage("🎉 Registration Successful!");
-      setPage("registerSuccess");
-    } else {
-      setMessage(data.message || "Register Failed");
+      const data = await res.json();
+
+      if (res.ok) {
+        setMessage("🎉 Registration Successful!");
+        setPage("registerSuccess");
+      } else {
+        setMessage(data.message || "Registration Failed");
+      }
+    } catch (error) {
+      setMessage("❌ Backend Connection Error");
     }
   };
 
-  // 🔥 LOGIN API
   const login = async () => {
-    const res = await fetch("http://10.0.3.210:5000/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form)
-    });
+    try {
+      const res = await fetch(`${API_URL}/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form),
+      });
 
-    const data = await res.json();
-    if (res.ok) {
-      setMessage("🚀 Login Successful!");
-      setPage("loginSuccess");
-    } else {
-      setMessage(data.message || "Login Failed");
+      const data = await res.json();
+
+      if (res.ok) {
+        setMessage("🚀 Login Successful!");
+        setPage("loginSuccess");
+      } else {
+        setMessage(data.message || "Login Failed");
+      }
+    } catch (error) {
+      setMessage("❌ Backend Connection Error");
     }
   };
 
   return (
     <div className="app">
-
-      {/* LOGIN PAGE */}
       {page === "login" && (
         <div className="card glass">
           <h1>Login</h1>
 
           <input
+            type="text"
             name="username"
             placeholder="Username"
+            value={form.username}
             onChange={handleChange}
           />
 
@@ -66,12 +83,19 @@ export default function App() {
             type="password"
             name="password"
             placeholder="Password"
+            value={form.password}
             onChange={handleChange}
           />
 
           <button onClick={login}>Login</button>
 
-          <p onClick={() => setPage("register")}>
+          <p
+            style={{ cursor: "pointer" }}
+            onClick={() => {
+              setMessage("");
+              setPage("register");
+            }}
+          >
             New user? Register
           </p>
 
@@ -79,14 +103,15 @@ export default function App() {
         </div>
       )}
 
-      {/* REGISTER PAGE */}
       {page === "register" && (
         <div className="card glass">
           <h1>Register</h1>
 
           <input
+            type="text"
             name="username"
             placeholder="Username"
+            value={form.username}
             onChange={handleChange}
           />
 
@@ -94,34 +119,55 @@ export default function App() {
             type="password"
             name="password"
             placeholder="Password"
+            value={form.password}
             onChange={handleChange}
           />
 
           <button onClick={register}>Register</button>
 
-          <p onClick={() => setPage("login")}>
-            Already have account? Login
+          <p
+            style={{ cursor: "pointer" }}
+            onClick={() => {
+              setMessage("");
+              setPage("login");
+            }}
+          >
+            Already have an account? Login
           </p>
 
           <div className="msg">{message}</div>
         </div>
       )}
 
-      {/* SUCCESS REGISTER */}
       {page === "registerSuccess" && (
         <div className="success">
-          🎉 Successfully Registered!
-          <button onClick={() => setPage("login")}>
-            Go to Login
+          <h2>🎉 Registration Successful!</h2>
+
+          <button
+            onClick={() => {
+              setMessage("");
+              setPage("login");
+            }}
+          >
+            Go To Login
           </button>
         </div>
       )}
 
-      {/* SUCCESS LOGIN */}
       {page === "loginSuccess" && (
         <div className="success">
-          🚀 Login Successful!
-          <button onClick={() => setPage("login")}>
+          <h2>🚀 Login Successful!</h2>
+
+          <button
+            onClick={() => {
+              setForm({
+                username: "",
+                password: "",
+              });
+              setMessage("");
+              setPage("login");
+            }}
+          >
             Logout
           </button>
         </div>
