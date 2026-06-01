@@ -209,7 +209,7 @@ pipeline {
                 docker stop react-app || true
                 docker rm react-app || true
 
-            docker pull 192902842773.dkr.ecr.ap-south-1.amazonaws.com/frontend-repo:latest
+                docker pull 192902842773.dkr.ecr.ap-south-1.amazonaws.com/frontend-repo:latest
 
                 docker run -d \
                 --name react-app \
