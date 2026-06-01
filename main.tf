@@ -46,10 +46,6 @@ resource "aws_eip_association" "frontend_eip_assoc" {
   allocation_id = aws_eip.frontend_eip.id
 }
 
-
-resource "aws_eip" "frontend_eip" {
-  domain = "vpc"
-}
 resource "aws_instance" "frontend" {
 
   ami           = "ami-03f4878755434977f"
@@ -58,7 +54,7 @@ resource "aws_instance" "frontend" {
   key_name = "three-tier-key"
 
   subnet_id = aws_subnet.public_1.id
-
+x
   vpc_security_group_ids = [
     aws_security_group.frontend_sg.id
   ]
