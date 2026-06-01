@@ -238,8 +238,7 @@ pipeline {
                 '''
             }
         }
-    }
-      stage('Get ALB DNS') {
+         stage('Get ALB DNS') {
             steps {
                 sh '''
                 echo "Fetching ALB DNS..."
@@ -260,6 +259,8 @@ pipeline {
         }
     }
 
+    }
+     
     post {
 
         success {
