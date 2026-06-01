@@ -131,7 +131,7 @@ resource "aws_lb_listener_rule" "frontend_rule" {
 # -------------------------
 # ROUTE: BACKEND (/health)
 # -------------------------
-resource "aws_lb_listener_rule" "backend_rule" {
+resource "aws_lb_listener_rule" "health_rule" {
   listener_arn = aws_lb_listener.listener.arn
   priority     = 1
 
