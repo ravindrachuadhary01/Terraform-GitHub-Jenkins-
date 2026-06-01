@@ -74,7 +74,7 @@ export default function App() {
           <input
             type="text"
             name="username"
-            placeholder="Username"
+            placeholder="Enter Username"
             value={form.username}
             onChange={handleChange}
           />
@@ -82,7 +82,7 @@ export default function App() {
           <input
             type="password"
             name="password"
-            placeholder="Password"
+            placeholder="Enter Password"
             value={form.password}
             onChange={handleChange}
           />
@@ -105,12 +105,12 @@ export default function App() {
 
       {page === "register" && (
         <div className="card glass">
-          <h1>Register</h1>
+          <h1>REGISTER PAGE</h1>
 
           <input
             type="text"
             name="username"
-            placeholder="Username"
+            placeholder="Enter Username"
             value={form.username}
             onChange={handleChange}
           />
