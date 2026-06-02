@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./App.css";
 
-const API_URL = "http://app-alb-1986965080.ap-south-1.elb.amazonaws.com";
+const API_URL = "http://app-alb-965196727.ap-south-1.elb.amazonaws.com/";
 
 export default function App() {
   const [page, setPage] = useState("login");
