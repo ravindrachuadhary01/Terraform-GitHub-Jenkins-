@@ -17,9 +17,9 @@ def get_conn():
         autocommit=True
     )
 
-# =========================
+# =========================+
 # HOME
-# =========================
+# =========================+
 @app.route("/")
 def home():
     return "Flask + RDS Working 🚀"
