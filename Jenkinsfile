@@ -2,14 +2,13 @@ pipeline {
     agent any
 
     environment {
-        AWS_REGION        = 'ap-south-1'
-        ACCOUNT_ID        = '192902842773'
+        AWS_REGION   = 'ap-south-1'
+        ACCOUNT_ID   = '192902842773'
 
-        BACKEND_REPO      = 'flask-backend'
-        FRONTEND_REPO     = 'frontend-repo'
+        BACKEND_REPO  = 'flask-backend'
+        FRONTEND_REPO = 'frontend-repo'
 
-        IMAGE_TAG         = 'latest'
-        
+        IMAGE_TAG     = 'latest'
     }
 
     parameters {
@@ -35,10 +34,7 @@ pipeline {
                     $class: 'AmazonWebServicesCredentialsBinding',
                     credentialsId: 'aws-creds'
                 ]]) {
-
-                    sh '''
-                    terraform init
-                    '''
+                    sh 'terraform init'
                 }
             }
         }
@@ -49,57 +45,37 @@ pipeline {
                     $class: 'AmazonWebServicesCredentialsBinding',
                     credentialsId: 'aws-creds'
                 ]]) {
-
-                    sh '''
-                    terraform plan
-                    '''
+                    sh 'terraform plan'
                 }
             }
         }
 
         stage('Terraform Apply / Destroy') {
             steps {
-
                 withCredentials([[
                     $class: 'AmazonWebServicesCredentialsBinding',
                     credentialsId: 'aws-creds'
                 ]]) {
 
                     script {
-
                         if (params.ACTION == 'apply') {
-
-                            sh '''
-                            terraform apply -auto-approve
-                            '''
-
+                            sh 'terraform apply -auto-approve'
                         } else {
-
-                            sh '''
-                            terraform destroy -auto-approve
-                            '''
+                            sh 'terraform destroy -auto-approve'
                         }
                     }
                 }
             }
         }
+    }
 
     post {
-
         success {
-
             echo '✅ PIPELINE SUCCESSFUL'
-
         }
 
         failure {
-
             echo '❌ PIPELINE FAILED'
         }
     }
 }
-
-}
-
-
-       
