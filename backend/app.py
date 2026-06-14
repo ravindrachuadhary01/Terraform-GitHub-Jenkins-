@@ -94,7 +94,7 @@ def login():
         password = data.get("password")
 
         conn = get_conn()
-        cursor = conn.cursor()
+        cursor = conn.cursor() 
 
         cursor.execute(
             "SELECT * FROM users WHERE username=%s AND password=%s",

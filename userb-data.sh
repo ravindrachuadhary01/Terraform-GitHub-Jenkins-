@@ -31,7 +31,7 @@ CREATE DATABASE IF NOT EXISTS appdb;
 
 EOF
 
-# Wait for services
+# Wait for services 
 sleep 20
 
 echo "Logging into ECR..."
